@@ -9,8 +9,6 @@ Anleitung zur Installation eines High-Availability Kubernetes-Clusters mit Talos
 ## Voraussetzungen
 
 - 3 Control-Plane Nodes (VMs oder Bare-Metal) im **Talos Maintenance Mode** (frisch von TalosOS-ISO gebootet, noch nicht konfiguriert)
-- AMD64-Architektur (AMD-Microcode wird geladen)
-- Disk-Zugriff auf `/dev/sda` (oder angepasst in Node-Patches)
 
 ---
 
@@ -126,11 +124,7 @@ rm cilium-${GOOS}-${GOARCH}.tar.gz{,.sha256sum}
 
 ### Cilium deployen
 
-```bash
-cilium install --values cilium/values-cilium.yaml
-```
 
-**Alternativ (ohne Values-File):**
 
 ```bash
 cilium install \
@@ -143,16 +137,6 @@ cilium install \
   --set k8sServiceHost=localhost \
   --set k8sServicePort=7445
 ```
-
-### Cilium-Features (aus `values-cilium.yaml`)
-
-- **kube-proxy Replacement:** Cilium übernimmt Service-Load-Balancing (eBPF-basiert)
-- **Native Routing:** Direktes Pod-zu-Pod Routing ohne Overlay
-- **Hubble:** Observability-Layer (Flow-Logs, Service Map) mit UI
-- **SCTP Support:** Stream Control Transmission Protocol für Multi-Homing
-- **Maglev LB-Algorithmus:** Konsistentes Hashing für stabile Backend-Selektion
-- **Security Capabilities:** Talos-spezifische Capabilities (z.B. `SYS_ADMIN` für eBPF)
-
 ---
 
 ## 7. Prometheus Operator CRDs (Optional)
