@@ -1,0 +1,11 @@
+cluster:
+  network:
+    # Default: 10.244.0.0/16 (~65k IPs)
+    podSubnets:
+      - 10.244.0.0/16
+    
+    # Service subnet CIDR - IP range for ClusterIP services
+    # Default: 10.96.0.0/12 (~1M IPs)
+    # Can be reduced to /16 (~65k IPs) for most clusters
+    serviceSubnets:
+      - 10.96.0.0/16

@@ -1,0 +1,10 @@
+# Talos configuration files (contain sensitive credentials)
+talos/talosconfig
+
+# Kubernetes configuration files (contain cluster credentials)
+talos/o11y-test-stack
+talos/*.kubeconfig
+
+# Generated configuration files (should be regenerated on each bootstrap)
+talos/controlplane.yaml
+talos/worker.yaml

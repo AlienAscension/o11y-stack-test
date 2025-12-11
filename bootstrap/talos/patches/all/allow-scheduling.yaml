@@ -1,0 +1,2 @@
+cluster:
+  allowSchedulingOnControlPlanes: true # Allows workload to be scheduled on CPs
