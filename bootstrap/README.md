@@ -1,4 +1,4 @@
-# TalosOS & Cilium Bootstrap für O11y-Stack
+# TalosOS & Cilium Bootstrap für Observability-Stacks
 
 Anleitung zur Installation eines High-Availability Kubernetes-Clusters mit TalosOS und Cilium CNI.
 
