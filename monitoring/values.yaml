@@ -16,7 +16,7 @@ prometheus:
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
-              storage: 50Gi
+              storage: 30Gi
           # storageClassName: <storage-class>  # Uncomment if needed
     
     # Resource Limits

@@ -7,3 +7,4 @@ persistence:
 
 defaultSettings:
   defaultReplicaCount: 1
+  storageReservedPercentageForDefaultDisk: 10
