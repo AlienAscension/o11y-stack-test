@@ -1,0 +1,5 @@
+machine:
+  install:
+    extensions:
+      - image: ghcr.io/siderolabs/iscsi-tools:v0.1.6
+      - image: ghcr.io/siderolabs/util-linux-tools:2.40.2-v1.11.5

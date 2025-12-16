@@ -1,6 +1,6 @@
 # kube-prometheus-stack (Meta-Monitoring)
 
-Dieser Stack überwacht alle anderen Observability-Stacks objektiv und läuft während aller Tests kontinuierlich.
+Dieser Stack überwacht alle anderen Observability-Stacks und läuft während aller Tests kontinuierlich.
 
 ## Komponenten
 - **Prometheus**: Metriken-Sammlung (7 Tage Retention)

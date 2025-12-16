@@ -1,175 +1,296 @@
-# OpenEBS Local PV Storage
+# Longhorn Storage on Talos
 
-Minimale OpenEBS-Installation nur mit Local PV Hostpath Provisioner für persistente Volumes.
+This directory contains the configuration for Longhorn distributed block storage on our Talos Kubernetes cluster.
 
-## Warum OpenEBS Local PV?
+## Overview
 
-- **Minimal**: Nur 1 Pod, kein Overhead
-- **Schnell**: Direkter Zugriff auf lokale Festplatte
-- **Ausreichend**: Perfekt für Test-Setups ohne HA-Anforderungen
-- **Keine Replikation**: Daten bleiben auf dem Node (ausreichend für Observability-Tests)
+Longhorn is a lightweight, reliable, and powerful distributed block storage system for Kubernetes. It provides:
+- Persistent volume management
+- Volume snapshots and backups
+- Cross-cluster disaster recovery
+- Automated non-disruptive upgrades
+
+## Prerequisites
+
+### Talos Configuration
+
+The cluster nodes must have the following configurations applied:
+
+#### 1. System Extensions
+
+All nodes require these system extensions via Image Factory:
+
+```yaml
+customization:
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/amd-ucode
+      - siderolabs/iscsi-tools
+      - siderolabs/util-linux-tools
+```
+
+**Image Schematic ID:** `743d53d3c9cc1942e0a3fc7167565665ea25823e6261d82bf022e9a9e50ed84d`
+
+#### 2. Kubelet Extra Mounts
+
+All nodes need proper mount propagation for Longhorn volumes:
+
+```yaml
+machine:
+  kubelet:
+    extraMounts:
+      - destination: /var/lib/longhorn
+        type: bind
+        source: /var/lib/longhorn
+        options:
+          - bind
+          - rshared
+          - rw
+```
+
+### Verify Extensions
+
+To verify the extensions are loaded:
+
+```bash
+talosctl get extensions --nodes <node-ip>
+```
+
+Expected output:
+```
+NAME               VERSION
+amd-ucode          20251021
+iscsi-tools        v0.2.0
+util-linux-tools   2.41.1
+```
 
 ## Installation
 
-### 1. Namespace erstellen
-
-Der Namespace benötigt eine `privileged` PodSecurity Policy, da OpenEBS auf Host-Pfade zugreifen muss.
-Der Namepsace ist in der namespace.yaml vordefiniert und so angewandt werden:
+### 1. Create Namespace
 
 ```bash
-kubectl apply -f ./namespace.yaml
+kubectl apply -f namespace.yaml
 ```
 
-### 2. Helm Repository hinzufügen
+### 2. Install Longhorn via Helm
+
 ```bash
-helm repo add openebs https://openebs.github.io/openebs
+helm repo add longhorn https://charts.longhorn.io
 helm repo update
+
+helm install longhorn longhorn/longhorn \
+  --namespace longhorn-system \
+  --values values.yaml
 ```
 
-### 3. OpenEBS installieren
+### 3. Verify Installation
+
+Check all pods are running:
+
 ```bash
-helm install openebs openebs/openebs \
-  --namespace openebs \
-  --values values.yaml \
-  --wait
+kubectl get pods -n longhorn-system
 ```
 
-### 4. Installation verifizieren
+Check Longhorn nodes:
+
 ```bash
-# Pod prüfen (sollte nur 1 Pod sein)
-kubectl get pods -n openebs
-
-# Sollte zeigen:
-# NAME                                         READY   STATUS    RESTARTS   AGE
-# openebs-localpv-provisioner-xxxxxxxxx-xxxxx  1/1     Running   0          30s
-
-# StorageClass prüfen
-kubectl get storageclass
-
-# Sollte zeigen:
-# NAME               PROVISIONER        RECLAIMPOLICY   VOLUMEBINDINGMODE
-# openebs-hostpath   openebs.io/local   Delete          WaitForFirstConsumer
+kubectl get nodes.longhorn.io -n longhorn-system
 ```
 
-### 5. Als Default StorageClass setzen (optional)
+## Configuration
+
+The `values.yaml` file contains our Longhorn configuration. Key settings include:
+
+- Default replica count
+- Storage over-provisioning
+- Backup targets
+- Node selector and tolerations
+- Resource limits
+
+## Usage
+
+### StorageClass
+
+Longhorn automatically creates a `longhorn` StorageClass:
+
 ```bash
-kubectl patch storageclass openebs-hostpath \
-  -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+kubectl get storageclass longhorn
 ```
 
-Verifizieren:
-```bash
-kubectl get storageclass
+### Creating a PVC
 
-# Sollte jetzt zeigen:
-# NAME                         PROVISIONER        RECLAIMPOLICY   VOLUMEBINDINGMODE
-# openebs-hostpath (default)   openebs.io/local   Delete          WaitForFirstConsumer
-```
-
-## Test PVC erstellen
-```bash
-cat <<EOF | kubectl apply -f -
+```yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: test-pvc
-  namespace: default
+  name: my-pvc
 spec:
-  storageClassName: openebs-hostpath
   accessModes:
     - ReadWriteOnce
+  storageClassName: longhorn
   resources:
     requests:
-      storage: 1Gi
-EOF
+      storage: 10Gi
 ```
 
-PVC Status prüfen:
-```bash
-kubectl get pvc test-pvc -n default
+Apply and verify:
 
-# Status "Pending" ist NORMAL!
-# Grund: volumeBindingMode ist "WaitForFirstConsumer"
-# PVC wird erst gebunden, wenn ein Pod sie nutzt
+```bash
+kubectl apply -f pvc.yaml
+kubectl get pvc my-pvc
 ```
 
-Test-Pod erstellen, der die PVC nutzt:
-```bash
-cat <<EOF | kubectl apply -f -
+### Using in a Pod
+
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  name: test-pod
-  namespace: default
+  name: my-pod
 spec:
   containers:
-  - name: test-container
-    image: nginx:alpine
+  - name: app
+    image: nginx
     volumeMounts:
-    - name: test-volume
+    - name: storage
       mountPath: /data
   volumes:
-  - name: test-volume
+  - name: storage
     persistentVolumeClaim:
-      claimName: test-pvc
+      claimName: my-pvc
+```
+
+## Accessing Longhorn UI
+
+Port-forward the Longhorn frontend service:
+
+```bash
+kubectl port-forward -n longhorn-system svc/longhorn-frontend 8080:80
+```
+
+Then access the UI at: http://localhost:8080
+
+## Monitoring
+
+Longhorn exposes Prometheus metrics on port 9500. If you have Prometheus installed, it will automatically discover and scrape Longhorn metrics.
+
+Common metrics to monitor:
+- `longhorn_volume_actual_size_bytes` - Volume usage
+- `longhorn_volume_state` - Volume health status
+- `longhorn_node_storage_capacity_bytes` - Node storage capacity
+- `longhorn_disk_capacity_bytes` - Disk capacity per node
+
+## Backup and Recovery
+
+### Configure Backup Target
+
+Longhorn supports backups to:
+- NFS shares
+- S3-compatible object storage
+- Azure Blob Storage
+
+Configure backup target in the UI or via settings:
+
+```bash
+kubectl edit settings.longhorn.io backup-target -n longhorn-system
+```
+
+### Create Snapshot
+
+```bash
+# Via kubectl
+kubectl create -f - <<EOF
+apiVersion: longhorn.io/v1beta2
+kind: Snapshot
+metadata:
+  name: my-snapshot
+  namespace: longhorn-system
+spec:
+  volume: pvc-xxxxx
 EOF
 ```
 
-Jetzt sollte die PVC gebunden sein:
+Or use the Longhorn UI to create snapshots interactively.
+
+## Troubleshooting
+
+### Check Node Status
+
 ```bash
-kubectl get pvc test-pvc -n default
-# STATUS sollte jetzt "Bound" sein
-
-kubectl get pv
-# Sollte ein automatisch erstelltes PV zeigen
+kubectl get nodes.longhorn.io -n longhorn-system -o wide
 ```
 
-Aufräumen:
+### View Manager Logs
+
 ```bash
-kubectl delete pod test-pod -n default
-kubectl delete pvc test-pvc -n default
+kubectl logs -n longhorn-system -l app=longhorn-manager
 ```
 
-## Wichtige Hinweise
+### Check Volume Status
 
-### VolumeBindingMode: WaitForFirstConsumer
-
-Die StorageClass nutzt `WaitForFirstConsumer`, was bedeutet:
-- PVC bleibt im Status `Pending` bis ein Pod sie nutzt
-- Das Volume wird erst erstellt, wenn klar ist, auf welchem Node der Pod läuft
-- **Vorteil**: Volume wird auf dem richtigen Node erstellt (wichtig bei multi-node Clustern)
-
-### Storage-Pfad auf Nodes
-
-Daten werden standardmäßig gespeichert unter:
-```
-/var/openebs/local/<pv-name>
-```
-
-## Deinstallation
-
-⚠️ **Achtung**: Löscht alle persistenten Volumes und Daten!
 ```bash
-# 1. Alle PVCs löschen, die openebs-hostpath nutzen
-kubectl get pvc --all-namespaces -o json | \
-  jq -r '.items[] | select(.spec.storageClassName=="openebs-hostpath") | 
-  "\(.metadata.namespace) \(.metadata.name)"' | \
-  while read ns name; do
-    kubectl delete pvc $name -n $ns
-  done
-
-# 2. OpenEBS deinstallieren
-helm uninstall openebs --namespace openebs
-
-# 3. Namespace löschen
-kubectl delete namespace openebs
-
-# 4. CRDs löschen (optional, wenn vollständig aufräumen)
-kubectl get crd | grep openebs | awk '{print $1}' | xargs kubectl delete crd
+kubectl get volumes.longhorn.io -n longhorn-system
 ```
 
-## Weitere Informationen
+### Common Issues
 
-- **Offizielle Dokumentation**: https://openebs.io/docs
-- **GitHub**: https://github.com/openebs/openebs
-- **Community**: Kubernetes Slack #openebs
+#### Volume Not Attaching
+
+1. Check if iSCSI tools are loaded:
+   ```bash
+   talosctl read /etc/iscsi/initiatorname.iscsi --nodes <node-ip>
+   ```
+
+2. Verify mount propagation:
+   ```bash
+   talosctl get machineconfig -o yaml --nodes <node-ip> | grep -A 10 extraMounts
+   ```
+
+#### Node Scheduling Issues
+
+Ensure nodes have sufficient disk space:
+```bash
+kubectl get nodes.longhorn.io -n longhorn-system -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.diskStatus}{"\n"}{end}'
+```
+
+## Upgrading
+
+To upgrade Longhorn:
+
+```bash
+helm repo update
+helm upgrade longhorn longhorn/longhorn \
+  --namespace longhorn-system \
+  --values values.yaml
+```
+
+Always review the [Longhorn upgrade guide](https://longhorn.io/docs/latest/deploy/upgrade/) before upgrading.
+
+## Uninstallation
+
+**Warning:** This will delete all volumes and data!
+
+```bash
+# Delete all PVCs first
+kubectl delete pvc --all --all-namespaces
+
+# Uninstall Longhorn
+helm uninstall longhorn -n longhorn-system
+
+# Delete namespace
+kubectl delete namespace longhorn-system
+```
+
+## Resources
+
+- [Longhorn Documentation](https://longhorn.io/docs/)
+- [Longhorn GitHub](https://github.com/longhorn/longhorn)
+- [Talos System Extensions](https://www.talos.dev/latest/talos-guides/configuration/system-extensions/)
+- [Best Practices](https://longhorn.io/docs/latest/best-practices/)
+
+## Cluster Information
+
+- **Talos Version:** v1.11.5
+- **Longhorn Version:** See `values.yaml`
+- **Nodes:** 3 control plane nodes (cp-01, cp-02, cp-03)
+- **Node IPs:** 192.168.109.107-109

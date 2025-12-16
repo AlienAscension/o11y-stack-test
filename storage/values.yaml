@@ -1,87 +1,9 @@
-# Local PV Provisioner (Hostpath)
-localpv-provisioner:
-  enabled: true
-  
-  # Image configuration
-  localpv:
-    image:
-      registry: docker.io
-      repository: openebs/provisioner-localpv
-      tag: 4.1.1
-  
-  # Helper image for cleanup
-  helperImage:
-    image: openebs/linux-utils:4.1.1
-  
-  # Hostpath configuration
-  hostpathClass:
-    enabled: true
-    name: openebs-hostpath
-    isDefaultClass: false  # Set via kubectl patch after installation
-    basePath: /var/openebs/local  # Storage path on nodes
-    reclaimPolicy: Delete
-    volumeBindingMode: WaitForFirstConsumer  # Volume created when Pod is scheduled
-  
-  # Resource limits for provisioner
-  resources:
-    requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 128Mi
-  
-  # Replica count
-  replicas: 1
+# Longhorn Helm Chart Values for Talos
+# Only non-default settings are specified here
 
-# CRDs (Custom Resource Definitions)
-openebs-crds:
-  # Disable CSI volume snapshots
-  csi:
-    volumeSnapshots:
-      enabled: false
+# Disable replication - use single replica per volume
+persistence:
+  defaultClassReplicaCount: 1
 
-# We only need Local PV Hostpath, disabling everything else to keep it minimal
-
-# Disable Node Device Manager (not needed for hostpath)
-openebs-ndm:
-  enabled: false
-
-engines:
-  # Disable Mayastor (replicated storage engine)
-  replicated:
-    mayastor:
-      enabled: false
-  # Disable LVM Local PV
-  # Disable ZFS Local PV
-  local:
-    lvm:
-      enabled: false
-    zfs:
-      enabled: false
-
-
-# OpenEBS comes with built-in observability (Loki, Minio, Alloy)
-# We don't need these as we're testing other observability stacks
-
-# Disable Loki (log aggregation)
-loki:
-  enabled: false
-
-# Disable Grafana Mimir (metrics)
-grafana-mimir:
-  enabled: false
-
-# Disable Alloy (telemetry collector)
-alloy:
-  enabled: false
-
-# SERVICE ACCOUNT
-serviceAccount:
-  create: true
-  name: openebs-localpv-provisioner
-
-# RBAC
-rbac:
-  create: true
-  pspEnabled: false  # PodSecurityPolicy is deprecated since K8s 1.25
+defaultSettings:
+  defaultReplicaCount: 1

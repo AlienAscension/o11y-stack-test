@@ -17,7 +17,7 @@ prometheus:
           resources:
             requests:
               storage: 50Gi
-          # storageClassName: <your-storage-class>  # Uncomment if needed
+          # storageClassName: <storage-class>  # Uncomment if needed
     
     # Resource Limits
     resources:
