@@ -1,0 +1,163 @@
+
+# Prometheus Configuration
+prometheus:
+  prometheusSpec:
+    # Service Monitor Selection
+    # CRITICAL: Set to false to scrape ServiceMonitors from ALL namespaces,
+    # not just those installed by this Helm chart
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    retention: 7d
+    
+    # Persistent Storage
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 50Gi
+          # storageClassName: <your-storage-class>  # Uncomment if needed
+    
+    # Resource Limits
+    resources:
+      requests:
+        cpu: 500m
+        memory: 2Gi
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+    
+    # Scrape Configuration
+    # 30s interval = good balance between granularity and storage
+    scrapeInterval: 30s
+    evaluationInterval: 30s
+    
+    # External Labels (for identification in exports)
+    externalLabels:
+      cluster: bachelor-thesis-test
+      thesis_component: meta-monitoring
+
+# Grafana Configuration
+grafana:
+  enabled: true
+  
+  # Admin Access
+  
+  adminPassword: prom-operator
+  
+  # Persistent Storage for Dashboards
+  persistence:
+    enabled: true
+    size: 10Gi
+    # storageClassName: <your-storage-class>  # Uncomment if needed
+  
+  # Service Configuration
+  service:
+    type: ClusterIP
+    port: 80
+  
+  # Dashboard Providers
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+  
+  # Additional Data Sources (for thesis comparison dashboards)
+  additionalDataSources: []
+  # Uncomment and configure when testing specific stacks:
+  # - name: LGTM-Loki
+  #   type: loki
+  #   url: http://loki-gateway.lgtm-stack.svc.cluster.local
+  # - name: OpenSearch
+  #   type: elasticsearch
+  #   url: http://opensearch.opensearch-stack.svc.cluster.local:9200
+
+# Node Exporter (Hardware Metrics)
+prometheus-node-exporter:
+  enabled: true
+  
+  # Runs as DaemonSet on every node
+  hostNetwork: true
+  hostPID: true
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+# kube-state-metrics (Kubernetes Object Metrics)
+kube-state-metrics:
+  enabled: true
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# Alertmanager (Optional)
+alertmanager:
+  enabled: true
+  
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+    
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+
+# Default Rules (Alerts)
+# Disable most default alerts as we're focused on metrics collection
+defaultRules:
+  create: true
+  rules:
+    # Keep basic alerting for cluster health
+    alertmanager: true
+    etcd: false
+    configReloaders: true
+    general: true
+    k8s: true
+    kubeApiserverAvailability: true
+    kubeApiserverSlos: false
+    kubeControllerManager: false
+    kubelet: true
+    kubeProxy: false
+    kubePrometheusGeneral: true
+    kubePrometheusNodeRecording: true
+    kubernetesApps: true
+    kubernetesResources: true
+    kubernetesStorage: true
+    kubernetesSystem: true
+    kubeSchedulerAlerting: false
+    kubeSchedulerRecording: false
+    kubeStateMetrics: true
+    network: true
+    node: true
+    nodeExporterAlerting: true
+    nodeExporterRecording: true
+    prometheus: true
+    prometheusOperator: true
