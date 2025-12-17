@@ -1,0 +1,347 @@
+# ============================================================================
+# OpenTelemetry Demo - OpenSearch Stack Konfiguration
+# Für Test mit OpenSearch, Fluent Bit, Prometheus, Jaeger
+# ============================================================================
+
+# Default-Einstellungen für alle Services mit OpenSearch-Stack-Endpunkten
+default:
+  env:
+    # OTLP Exporter Endpoints für OpenSearch Stack
+    # Traces gehen zu Jaeger
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: "http://jaeger-collector.observability-opensearch.svc.cluster.local:4317"
+    - name: OTEL_EXPORTER_OTLP_PROTOCOL
+      value: "grpc"
+    
+    # Metrics-spezifische Konfiguration (Prometheus)
+    - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+      value: "http://prometheus.observability-opensearch.svc.cluster.local:9090/api/v1/otlp/v1/metrics"
+    - name: OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
+      value: "http/protobuf"
+    
+    # Logs-Konfiguration
+    # Logs werden primär von Fluent Bit DaemonSet gesammelt
+    # OTEL Collector kann zusätzlich Logs direkt an Fluent Bit weiterleiten
+    - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
+      value: "http://fluent-bit.observability-opensearch.svc.cluster.local:24224"
+    
+    # Traces-Konfiguration
+    - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+      value: "http://jaeger-collector.observability-opensearch.svc.cluster.local:4317"
+    - name: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+      value: "grpc"
+    
+    # Service-spezifische Labels
+    - name: OTEL_SERVICE_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.labels['app.kubernetes.io/component']
+    - name: OTEL_K8S_NAMESPACE
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.namespace
+    - name: OTEL_K8S_NODE_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: spec.nodeName
+    - name: OTEL_K8S_POD_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.name
+    - name: OTEL_RESOURCE_ATTRIBUTES
+      value: service.namespace=$(OTEL_K8S_NAMESPACE),k8s.namespace.name=$(OTEL_K8S_NAMESPACE),k8s.node.name=$(OTEL_K8S_NODE_NAME),k8s.pod.name=$(OTEL_K8S_POD_NAME),deployment.environment=test,stack=opensearch
+
+  # Ressourcen (übernommen von Base)
+  resources:
+    limits:
+      memory: 200Mi
+      cpu: 200m
+    requests:
+      memory: 100Mi
+      cpu: 100m
+
+# OpenTelemetry Collector Konfiguration
+opentelemetry-collector:
+  enabled: true
+  mode: deployment
+  
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+    
+    processors:
+      batch:
+        timeout: 10s
+        send_batch_size: 1024
+        send_batch_max_size: 2048
+      
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: 75
+        spike_limit_percentage: 25
+      
+      # Resource Processor für zusätzliche Attribute
+      resource:
+        attributes:
+          - key: deployment.environment
+            value: test
+            action: upsert
+          - key: observability.stack
+            value: opensearch
+            action: upsert
+      
+      # Kubernetes Attributes Processor
+      k8sattributes:
+        auth_type: "serviceAccount"
+        passthrough: false
+        extract:
+          metadata:
+            - k8s.namespace.name
+            - k8s.deployment.name
+            - k8s.pod.name
+            - k8s.pod.uid
+            - k8s.node.name
+          labels:
+            - tag_name: app.label.component
+              key: app.kubernetes.io/component
+              from: pod
+    
+    exporters:
+      # Jaeger für Traces
+      otlp/jaeger:
+        endpoint: jaeger-collector.observability-opensearch.svc.cluster.local:4317
+        tls:
+          insecure: true
+        sending_queue:
+          enabled: true
+          num_consumers: 10
+          queue_size: 1000
+        retry_on_failure:
+          enabled: true
+          initial_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 300s
+      
+      # Alternative: Jaeger gRPC Format
+      # jaeger:
+      #   endpoint: jaeger-collector.observability-opensearch.svc.cluster.local:14250
+      #   tls:
+      #     insecure: true
+      
+      # Prometheus Remote Write für Metrics
+      prometheusremotewrite/prometheus:
+        endpoint: http://prometheus.observability-opensearch.svc.cluster.local:9090/api/v1/write
+        tls:
+          insecure: true
+        retry_on_failure:
+          enabled: true
+          initial_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 300s
+        resource_to_telemetry_conversion:
+          enabled: true
+      
+      # Logs - Weiterleitung an Fluent Bit (Forward Protocol)
+      # Alternativ: Fluent Bit sammelt direkt von Container-Logs
+      # Hier als Backup-Option konfiguriert
+      fluentforward:
+        endpoint: fluent-bit.observability-opensearch.svc.cluster.local:24224
+        tls:
+          insecure: true
+        retry_on_failure:
+          enabled: true
+          initial_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 300s
+        sending_queue:
+          enabled: true
+          num_consumers: 5
+          queue_size: 500
+      
+      # Logging für Debugging (optional)
+      # logging:
+      #   loglevel: debug
+    
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource, k8sattributes]
+          exporters: [otlp/jaeger]
+        
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource, k8sattributes]
+          exporters: [prometheusremotewrite/prometheus]
+        
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource, k8sattributes]
+          exporters: [fluentforward]
+  
+  # Collector Resources
+  resources:
+    limits:
+      memory: 1Gi
+      cpu: 1000m
+    requests:
+      memory: 512Mi
+      cpu: 500m
+  
+  # Collector Replicas
+  replicaCount: 2
+  
+  # RBAC für Kubernetes Attributes Processor
+  clusterRole:
+    create: true
+    rules:
+      - apiGroups:
+          - ""
+        resources:
+          - pods
+          - namespaces
+        verbs:
+          - get
+          - watch
+          - list
+      - apiGroups:
+          - apps
+        resources:
+          - replicasets
+          - deployments
+        verbs:
+          - get
+          - list
+          - watch
+  
+  serviceAccount:
+    create: true
+  
+  # Ports
+  ports:
+    otlp:
+      enabled: true
+      containerPort: 4317
+      servicePort: 4317
+      protocol: TCP
+    otlp-http:
+      enabled: true
+      containerPort: 4318
+      servicePort: 4318
+      protocol: TCP
+    metrics:
+      enabled: true
+      containerPort: 8888
+      servicePort: 8888
+      protocol: TCP
+
+# ServiceMonitor für Meta-Monitoring durch kube-prom
+serviceMonitor:
+  enabled: true
+  additionalLabels:
+    prometheus: kube-prom
+    release: kube-prom
+    stack: opensearch
+
+# Load Generator Konfiguration
+components:
+  loadGenerator:
+    enabled: true
+    replicas: 1
+    env:
+      - name: LOCUST_USERS
+        value: "0"  # Startwert - wird während Test angepasst
+      - name: LOCUST_SPAWN_RATE
+        value: "5"
+      - name: LOCUST_HOST
+        value: "http://frontend:8080"
+      - name: LOCUST_HEADLESS
+        value: "true"
+      - name: LOCUST_AUTOSTART
+        value: "true"
+      - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
+        value: python
+    
+    resources:
+      limits:
+        memory: 512Mi
+        cpu: 500m
+      requests:
+        memory: 256Mi
+        cpu: 200m
+
+  # Alle anderen Services übernehmen die Default-Konfiguration
+  frontend:
+    enabled: true
+    replicas: 1
+  
+  accountingService:
+    enabled: true
+    replicas: 1
+  
+  adService:
+    enabled: true
+    replicas: 1
+  
+  cartService:
+    enabled: true
+    replicas: 1
+  
+  checkoutService:
+    enabled: true
+    replicas: 1
+  
+  currencyService:
+    enabled: true
+    replicas: 1
+  
+  emailService:
+    enabled: true
+    replicas: 1
+  
+  frauddetectionService:
+    enabled: true
+    replicas: 1
+  
+  paymentService:
+    enabled: true
+    replicas: 1
+  
+  productCatalogService:
+    enabled: true
+    replicas: 1
+  
+  quoteService:
+    enabled: true
+    replicas: 1
+  
+  recommendationService:
+    enabled: true
+    replicas: 1
+  
+  shippingService:
+    enabled: true
+    replicas: 1
+
+  # Kafka deaktiviert
+  kafka:
+    enabled: false
+
+# Deaktiviere integrierte Observability (wird extern bereitgestellt)
+jaeger:
+  enabled: false
+
+prometheus:
+  enabled: false
+
+grafana:
+  enabled: false

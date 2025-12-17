@@ -1,0 +1,95 @@
+# Loki Values für LGTM Stack
+# Deployment Mode: SingleBinary (einfachste Variante für Tests)
+
+deploymentMode: SingleBinary
+
+loki:
+  # Auth deaktivieren (kein Multi-Tenancy benötigt)
+  auth_enabled: false
+  
+  # Common Config
+  commonConfig:
+    replication_factor: 1
+  
+  # Storage Configuration
+  storage:
+    # Verwende lokales Filesystem statt S3
+    type: filesystem
+    # Bucket-Namen sind bei filesystem nicht relevant, aber müssen definiert sein
+    bucketNames:
+      chunks: chunks
+      ruler: ruler
+      admin: admin
+  
+  # Schema Config
+  schemaConfig:
+    configs:
+      - from: 2024-01-01
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+  
+  # Limits Config
+  limits_config:
+    # Erhöhe Limits für Demo-Workload
+    ingestion_rate_mb: 10
+    ingestion_burst_size_mb: 20
+    per_stream_rate_limit: 5MB
+    per_stream_rate_limit_burst: 15MB
+    max_cache_freshness_per_query: 10m
+
+# Single Binary Configuration
+singleBinary:
+  replicas: 1
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  
+  # Persistence für lokales Filesystem
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: null  # Verwendet default StorageClass
+
+# Gateway (Nginx) - eingehende Requests
+gateway:
+  enabled: true
+  replicas: 1
+  
+  service:
+    type: ClusterIP
+    port: 80
+
+# Backend Service (für direkte Verbindung)
+backend:
+  replicas: 0  # Nicht benötigt im SingleBinary Mode
+
+# Read/Write Services (nicht benötigt im SingleBinary Mode)
+read:
+  replicas: 0
+
+write:
+  replicas: 0
+
+# Monitoring
+monitoring:
+  selfMonitoring:
+    enabled: false
+    grafanaAgent:
+      installOperator: false
+
+# Service Monitor für kube-prometheus-stack
+serviceMonitor:
+  enabled: false  # Aktiviere nur wenn gewünscht
+
+# Testing
+test:
+  enabled: false

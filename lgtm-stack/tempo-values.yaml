@@ -1,0 +1,59 @@
+# Tempo Values für LGTM Stack
+# Deployment Mode: Monolithic (einfachste Variante für Tests)
+
+tempo:
+  # Multitenancy deaktivieren
+  multitenancyEnabled: false
+  
+  # OTLP Receiver konfigurieren
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
+  
+  # Storage Configuration - lokales Filesystem
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /var/tempo/traces
+      wal:
+        path: /var/tempo/wal
+  
+  # Metrics Generator aktivieren (für RED metrics)
+  metricsGenerator:
+    enabled: true
+    remoteWriteUrl: "http://mimir-gateway.observability-lgtm.svc.cluster.local/api/v1/push"
+
+# Deployment Config
+replicas: 1
+
+# Resources
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+# Persistence
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: null  # Verwendet default StorageClass
+
+# Service Config
+service:
+  type: ClusterIP
+
+# Service Monitor
+serviceMonitor:
+  enabled: false
+
+# Gateway (Query Frontend)
+gateway:
+  enabled: true

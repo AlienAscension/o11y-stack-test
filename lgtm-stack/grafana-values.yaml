@@ -1,0 +1,105 @@
+# Grafana Values für LGTM Stack
+
+# Admin User
+adminUser: admin
+adminPassword: admin123
+
+# Persistence
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClass: null  # Verwendet default StorageClass
+
+# Resources
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# Service
+service:
+  type: ClusterIP
+  port: 80
+
+# Datasources - automatisch konfiguriert
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      # Loki Datasource
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki-gateway.observability-lgtm.svc.cluster.local
+        isDefault: false
+        version: 1
+        editable: true
+        jsonData:
+          maxLines: 1000
+      
+      # Tempo Datasource
+      - name: Tempo
+        type: tempo
+        access: proxy
+        url: http://tempo.observability-lgtm.svc.cluster.local:3100
+        isDefault: false
+        version: 1
+        editable: true
+        jsonData:
+          tracesToLogsV2:
+            datasourceUid: loki
+          tracesToMetrics:
+            datasourceUid: prometheus
+          serviceMap:
+            datasourceUid: prometheus
+          nodeGraph:
+            enabled: true
+      
+      # Prometheus Datasource
+      - name: Prometheus
+        type: prometheus
+        uid: prometheus
+        access: proxy
+        url: http://prometheus-server.observability-lgtm.svc.cluster.local
+        isDefault: true
+        version: 1
+        editable: true
+        jsonData:
+          timeInterval: 30s
+          exemplarTraceIdDestinations:
+            - name: trace_id
+              datasourceUid: tempo
+
+# Dashboards Provider
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+
+# Environment Variables
+env:
+  GF_FEATURE_TOGGLES_ENABLE: "traceqlEditor"
+  GF_EXPLORE_ENABLED: "true"
+
+# Security
+grafana.ini:
+  server:
+    root_url: http://localhost:3000
+  security:
+    admin_user: admin
+    admin_password: admin123
+  auth.anonymous:
+    enabled: false
+  users:
+    auto_assign_org_role: Viewer

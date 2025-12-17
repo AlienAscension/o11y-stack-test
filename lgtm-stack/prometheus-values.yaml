@@ -1,0 +1,37 @@
+# Prometheus Values for LGTM Stack
+
+# Disable components that are not needed for now
+alertmanager:
+  enabled: false
+
+pushgateway:
+  enabled: false
+
+# Server component configuration
+server:
+  # Use a persistent volume for metrics storage
+  persistentVolume:
+    enabled: true
+    size: 10Gi
+    storageClass: null # Use default StorageClass
+
+  # Resource allocation
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+
+# Service Monitor for scraping metrics from Prometheus itself
+serviceMonitor:
+  enabled: true
+  
+# Scrape configurations
+serverFiles:
+  prometheus.yml:
+    scrape_configs:
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']
