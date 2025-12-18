@@ -1,6 +1,6 @@
 # ============================================================================
 # OpenTelemetry Demo - LGTM Stack Konfiguration
-# Für Test mit Loki, Grafana, Tempo, Mimir
+# Für Test mit Loki, Grafana, Tempo, Prometheus
 # ============================================================================
 
 # Default-Einstellungen für alle Services mit LGTM-spezifischen Endpunkten
@@ -14,9 +14,9 @@ default:
     
     # Metrics-spezifische Konfiguration
     - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
-      value: "http://mimir-distributor.observability-lgtm.svc.cluster.local:4317"
+      value: "http://prometheus-server.observability-lgtm.svc.cluster.local:80"
     - name: OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
-      value: "grpc"
+      value: "http"
     
     # Logs-Konfiguration
     - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
@@ -114,28 +114,16 @@ opentelemetry-collector:
           max_interval: 30s
           max_elapsed_time: 300s
       
-      # Mimir für Metrics (OTLP)
-      otlp/mimir:
-        endpoint: mimir-distributor.observability-lgtm.svc.cluster.local:4317
+      # Prometheus für Metrics (Remote Write)
+      prometheusremotewrite/prometheus:
+        endpoint: http://prometheus-server.observability-lgtm.svc.cluster.local:80/api/v1/write
         tls:
           insecure: true
-        sending_queue:
-          enabled: true
-          num_consumers: 10
-          queue_size: 1000
         retry_on_failure:
           enabled: true
           initial_interval: 5s
           max_interval: 30s
           max_elapsed_time: 300s
-      
-      # Alternative: Prometheus Remote Write für Mimir
-      # prometheusremotewrite/mimir:
-      #   endpoint: http://mimir-distributor.observability-lgtm.svc.cluster.local:8080/api/v1/push
-      #   tls:
-      #     insecure: true
-      #   retry_on_failure:
-      #     enabled: true
       
       # Loki für Logs (OTLP)
       otlp/loki:
@@ -166,7 +154,7 @@ opentelemetry-collector:
         metrics:
           receivers: [otlp]
           processors: [memory_limiter, batch, resource]
-          exporters: [otlp/mimir]
+          exporters: [prometheusremotewrite/prometheus]
         
         logs:
           receivers: [otlp]

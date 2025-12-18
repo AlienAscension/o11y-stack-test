@@ -9,6 +9,10 @@ pushgateway:
 
 # Server component configuration
 server:
+  # Enable Remote Write Receiver for OTLP metrics ingestion
+  extraFlags:
+    - web.enable-remote-write-receiver
+  
   # Use a persistent volume for metrics storage
   persistentVolume:
     enabled: true

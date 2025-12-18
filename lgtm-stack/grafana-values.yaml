@@ -96,9 +96,9 @@ env:
 grafana.ini:
   server:
     root_url: http://localhost:3000
-  security:
-    admin_user: admin
-    admin_password: admin123
+  # security:
+  #   admin_user: admin
+  #   admin_password: admin123
   auth.anonymous:
     enabled: false
   users:

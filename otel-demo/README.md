@@ -5,7 +5,7 @@ Dieses Verzeichnis enthält die Helm Values-Dateien für die Installation der Op
 ## Dateien-Übersicht
 
 ### Values-Dateien
-- **`values-lgtm.yaml`** - Konfiguration für LGTM Stack (Loki, Grafana, Tempo, Mimir)
+- **`values-lgtm.yaml`** - Konfiguration für LGTM Stack (Loki, Grafana, Tempo, Prometheus)
 - **`values-opensearch.yaml`** - Konfiguration für OpenSearch Stack
 - **`values-victoriametrics.yaml`** - Konfiguration für VictoriaMetrics Stack
 
@@ -32,7 +32,7 @@ Dieses Verzeichnis enthält die Helm Values-Dateien für die Installation der Op
 2. **LGTM-Stack** (im Namespace `observability-lgtm`)
    - Loki Distributor: `loki-distributor.observability-lgtm.svc.cluster.local:4317`
    - Tempo Distributor: `tempo-distributor.observability-lgtm.svc.cluster.local:4317`
-   - Mimir Distributor: `mimir-distributor.observability-lgtm.svc.cluster.local:4317`
+   - Prometheus Server: `prometheus-server.observability-lgtm.svc.cluster.local:80`
    - Grafana: `grafana.observability-lgtm.svc.cluster.local:3000`
 
 #### Für OpenSearch-Test:
@@ -236,13 +236,13 @@ kubectl port-forward -n monitoring svc/kube-prom-grafana 3000:80
 
 ### LGTM Stack
 - Traces werden direkt via OTLP gRPC an Tempo gesendet
-- Metrics gehen via OTLP an Mimir
+- Metrics gehen via Prometheus Remote Write an Prometheus
 - Logs werden via OTLP an Loki gesendet
-- Alle drei Komponenten verwenden OTLP nativ
+- Prometheus Remote Write Receiver ist aktiviert für OTLP-Metrik-Ingestion
 
 **Erwartete Endpunkte:**
 - Tempo UI: `http://tempo-query-frontend.observability-lgtm:3100`
-- Mimir Query: `http://mimir-query-frontend.observability-lgtm:8080`
+- Prometheus Server: `http://prometheus-server.observability-lgtm:80`
 - Loki Query: `http://loki-query-frontend.observability-lgtm:3100`
 
 ### OpenSearch Stack
