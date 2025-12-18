@@ -1,0 +1,144 @@
+# Grafana Alloy Values for LGTM Stack
+# Collects container logs and sends to Loki
+
+alloy:
+  configMap:
+    content: |-
+      // Discover pods in otel-demo-lgtm namespace
+      discovery.kubernetes "pods" {
+        role = "pod"
+        namespaces {
+          names = ["otel-demo-lgtm"]
+        }
+      }
+
+      // Scrape logs from discovered pods
+      discovery.relabel "pods" {
+        targets = discovery.kubernetes.pods.targets
+
+        // Set node name
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          target_label  = "node_name"
+        }
+
+        // Set namespace
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+
+        // Set pod name
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+
+        // Set container name
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+
+        // Set app label
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          target_label  = "app"
+        }
+
+        // Set component label
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
+          target_label  = "component"
+        }
+
+        // Set service name
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
+          target_label  = "service_name"
+        }
+
+        // Set log path
+        rule {
+          source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+          separator     = "/"
+          target_label  = "__path__"
+          replacement   = "/var/log/pods/*$1/*.log"
+        }
+      }
+
+      // Read logs from files
+      loki.source.kubernetes "pods" {
+        targets    = discovery.relabel.pods.output
+        forward_to = [loki.process.pods.receiver]
+      }
+
+      // Process logs (parse JSON if present)
+      loki.process "pods" {
+        forward_to = [loki.write.loki.receiver]
+
+        stage.cri {}
+
+        stage.json {
+          expressions = {
+            level   = "level",
+            message = "msg",
+          }
+        }
+
+        stage.labels {
+          values = {
+            level = "",
+          }
+        }
+      }
+
+      // Write logs to Loki
+      loki.write "loki" {
+        endpoint {
+          url = "http://loki-gateway.observability-lgtm.svc.cluster.local/loki/api/v1/push"
+        }
+      }
+
+extraVolumeMounts:
+  - name: pods
+    mountPath: /var/log/pods
+    readOnly: true
+  - name: varlibdockercontainers
+    mountPath: /var/lib/docker/containers
+    readOnly: true
+
+extraVolumes:
+  - name: pods
+    hostPath:
+      path: /var/log/pods
+  - name: varlibdockercontainers
+    hostPath:
+      path: /var/lib/docker/containers
+
+# Controller type - DaemonSet to run on all nodes
+controller:
+  type: "daemonset"
+
+# Resources
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Service account
+serviceAccount:
+  create: true
+
+# RBAC
+rbac:
+  create: true
+
+# Security context (required for reading logs)
+securityContext:
+  privileged: false
+  runAsUser: 0
+  runAsGroup: 0

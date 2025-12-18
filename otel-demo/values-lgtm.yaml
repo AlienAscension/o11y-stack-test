@@ -8,7 +8,7 @@ default:
   env:
     # OTLP Exporter Endpoints für LGTM Stack
     - name: OTEL_EXPORTER_OTLP_ENDPOINT
-      value: "http://tempo-distributor.observability-lgtm.svc.cluster.local:4317"
+      value: "http://tempo.observability-lgtm.svc.cluster.local:4317"
     - name: OTEL_EXPORTER_OTLP_PROTOCOL
       value: "grpc"
     
@@ -20,13 +20,13 @@ default:
     
     # Logs-Konfiguration
     - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
-      value: "http://loki-distributor.observability-lgtm.svc.cluster.local:4317"
+      value: "http://loki-gateway.observability-lgtm.svc.cluster.local/otlp"
     - name: OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
-      value: "grpc"
+      value: "http"
     
     # Traces-Konfiguration
     - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-      value: "http://tempo-distributor.observability-lgtm.svc.cluster.local:4317"
+      value: "http://tempo.observability-lgtm.svc.cluster.local:4317"
     - name: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
       value: "grpc"
     
@@ -53,15 +53,6 @@ default:
           fieldPath: metadata.name
     - name: OTEL_RESOURCE_ATTRIBUTES
       value: service.namespace=$(OTEL_K8S_NAMESPACE),k8s.namespace.name=$(OTEL_K8S_NAMESPACE),k8s.node.name=$(OTEL_K8S_NODE_NAME),k8s.pod.name=$(OTEL_K8S_POD_NAME),deployment.environment=test,stack=lgtm
-
-  # Ressourcen (übernommen von Base)
-  resources:
-    limits:
-      memory: 200Mi
-      cpu: 200m
-    requests:
-      memory: 100Mi
-      cpu: 100m
 
 # OpenTelemetry Collector Konfiguration
 opentelemetry-collector:
@@ -101,7 +92,7 @@ opentelemetry-collector:
     exporters:
       # Tempo für Traces
       otlp/tempo:
-        endpoint: tempo-distributor.observability-lgtm.svc.cluster.local:4317
+        endpoint: tempo.observability-lgtm.svc.cluster.local:4317
         tls:
           insecure: true
         sending_queue:
@@ -125,20 +116,20 @@ opentelemetry-collector:
           max_interval: 30s
           max_elapsed_time: 300s
       
-      # Loki für Logs (OTLP)
-      otlp/loki:
-        endpoint: loki-distributor.observability-lgtm.svc.cluster.local:4317
+      # Loki für Logs (OTLP HTTP with custom path)
+      otlphttp/loki:
+        endpoint: http://loki-gateway.observability-lgtm.svc.cluster.local/otlp
         tls:
           insecure: true
-        sending_queue:
-          enabled: true
-          num_consumers: 10
-          queue_size: 1000
         retry_on_failure:
           enabled: true
           initial_interval: 5s
           max_interval: 30s
           max_elapsed_time: 300s
+      
+      # Debug exporter for troubleshooting
+      debug:
+        verbosity: normal
       
       # Logging für Debugging (optional, nur während Setup)
       # logging:
@@ -159,7 +150,7 @@ opentelemetry-collector:
         logs:
           receivers: [otlp]
           processors: [memory_limiter, batch, resource]
-          exporters: [otlp/loki]
+          exporters: [otlphttp/loki, debug]
   
   # Collector Resources
   resources:
@@ -191,33 +182,31 @@ opentelemetry-collector:
       servicePort: 8888
       protocol: TCP
 
-# ServiceMonitor für Meta-Monitoring durch kube-prom
-serviceMonitor:
-  enabled: true
-  additionalLabels:
-    prometheus: kube-prom
-    release: kube-prom
-    stack: lgtm
-
-# Load Generator Konfiguration (siehe Base-Values)
+# Components Konfiguration
 components:
-  loadGenerator:
+  # Load Generator für Test-Phasen
+  load-generator:
     enabled: true
+    useDefault:
+      env: true
     replicas: 1
     env:
+      - name: LOCUST_WEB_HOST
+        value: "0.0.0.0"
+      - name: LOCUST_WEB_PORT
+        value: "8089"
       - name: LOCUST_USERS
         value: "0"  # Startwert - wird während Test angepasst
       - name: LOCUST_SPAWN_RATE
         value: "5"
       - name: LOCUST_HOST
-        value: "http://frontend:8080"
+        value: "http://frontend-proxy:8080"
       - name: LOCUST_HEADLESS
-        value: "true"
+        value: "false"
       - name: LOCUST_AUTOSTART
         value: "true"
       - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
         value: python
-    
     resources:
       limits:
         memory: 512Mi
@@ -229,59 +218,88 @@ components:
   # Alle anderen Services übernehmen die Default-Konfiguration
   frontend:
     enabled: true
+    useDefault:
+      env: true
     replicas: 1
   
-  accountingService:
+  accounting:
     enabled: true
+    useDefault:
+      env: true
     replicas: 1
   
-  adService:
+  ad:
     enabled: true
+    useDefault:
+      env: true
     replicas: 1
   
-  cartService:
+  cart:
     enabled: true
+    useDefault:
+      env: true
     replicas: 1
   
-  checkoutService:
+  checkout:
     enabled: true
+    useDefault:
+      env: true
     replicas: 1
   
-  currencyService:
+  currency:
     enabled: true
+    useDefault:
+      env: true
     replicas: 1
   
-  emailService:
+  email:
     enabled: true
+    useDefault:
+      env: true
     replicas: 1
   
-  frauddetectionService:
+  fraud-detection:
     enabled: true
+    useDefault:
+      env: true
     replicas: 1
   
-  paymentService:
+  payment:
     enabled: true
+    useDefault:
+      env: true
     replicas: 1
   
-  productCatalogService:
+  product-catalog:
     enabled: true
+    useDefault:
+      env: true
     replicas: 1
   
-  quoteService:
+  quote:
     enabled: true
+    useDefault:
+      env: true
     replicas: 1
   
-  recommendationService:
+  recommendation:
     enabled: true
+    useDefault:
+      env: true
     replicas: 1
   
-  shippingService:
+  shipping:
     enabled: true
+    useDefault:
+      env: true
     replicas: 1
 
-  # Kafka deaktiviert
+  # Kafka für accounting, checkout, fraud-detection Services
   kafka:
-    enabled: false
+    enabled: true
+    useDefault:
+      env: true
+    replicas: 1
 
 # Deaktiviere integrierte Observability (wird extern bereitgestellt)
 jaeger:

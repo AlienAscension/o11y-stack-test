@@ -11,14 +11,6 @@ Dieses Verzeichnis enthält die Helm Values-Dateien für die Installation der Op
 
 ## Voraussetzungen
 
-### Cluster-Anforderungen
-- Kubernetes Cluster
-- 3 Worker Nodes mit je:
-  - 4 vCPUs
-  - 16 GB RAM
-  - 100 GB Disk Space
-- StorageClass für dynamische PV-Provisionierung
-
 ### Installierte Tools
 - `kubectl`
 - `helm`
@@ -28,7 +20,7 @@ Dieses Verzeichnis enthält die Helm Values-Dateien für die Installation der Op
 #### Für alle Tests:
 1. **kube-prometheus-stack** (Setup in [Abschnitt Monitoring](https://github.com/AlienAscension/o11y-stack-test/tree/main/monitoring)
 
-#### Für LGTM-Test:
+#### Für LGTM-Test: (Setup in [Abschnitt LGTM-Stack](https://github.com/AlienAscension/o11y-stack-test/tree/main/lgtm-stack)
 2. **LGTM-Stack** (im Namespace `observability-lgtm`)
    - Loki Distributor: `loki-distributor.observability-lgtm.svc.cluster.local:4317`
    - Tempo Distributor: `tempo-distributor.observability-lgtm.svc.cluster.local:4317`
@@ -124,6 +116,20 @@ kubectl port-forward -n monitoring \
 
 # Öffne Browser: http://localhost:9090/targets
 # Suche nach "otel-demo" Targets
+```
+
+## Output nach erfolgreicher Installation
+
+```
+All services are available via the Frontend proxy: http://localhost:8080
+  by running these commands:
+     kubectl --namespace otel-demo-lgtm port-forward svc/frontend-proxy 8080:8080
+  The following services are available at these paths after the frontend-proxy service is exposed with port forwarding:
+  Webstore             http://localhost:8080/
+  Jaeger UI            http://localhost:8080/jaeger/ui/
+  Grafana              http://localhost:8080/grafana/
+  Load Generator UI    http://localhost:8080/loadgen/
+  Feature Flags UI     http://localhost:8080/feature/
 ```
 
 ## Test-Durchführung
