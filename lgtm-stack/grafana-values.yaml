@@ -58,7 +58,7 @@ datasources:
           nodeGraph:
             enabled: true
       
-      # Prometheus Datasource
+      # Prometheus Datasource (LGTM Stack - für Metrics Ingestion)
       - name: Prometheus
         type: prometheus
         uid: prometheus
@@ -72,6 +72,18 @@ datasources:
           exemplarTraceIdDestinations:
             - name: trace_id
               datasourceUid: tempo
+      
+      # Prometheus Datasource (Monitoring Stack - für Container Metriken)
+      - name: Prometheus-Monitoring
+        type: prometheus
+        uid: prometheus-monitoring
+        access: proxy
+        url: http://kube-prom-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+        isDefault: false
+        version: 1
+        editable: true
+        jsonData:
+          timeInterval: 30s
 
 # Dashboards Provider
 dashboardProviders:

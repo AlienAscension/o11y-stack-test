@@ -81,7 +81,7 @@ opentelemetry-collector:
       # Export zu Loki (Logs via OTLP HTTP)
       # WICHTIG: Der loki-gateway erwartet OTLP oft unter /otlp
       otlphttp/loki:
-        endpoint: "http://loki-gateway.observability-lgtm.svc.cluster.local/otlp"
+        endpoint: "http://loki-gateway.observability-lgtm.svc.cluster.local/otlp/v1/logs"
         tls:
           insecure: true
       

@@ -1,0 +1,152 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k6-query-script
+  namespace: monitoring
+data:
+  query-benchmark.js: |
+    import http from 'k6/http';
+    import { check, sleep } from 'k6';
+    import { Trend, Counter } from 'k6/metrics';
+    import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.2/index.js';
+
+    // Custom Metrics für die Latenz-Analyse
+    const promqlLatency = new Trend('promql_query_duration_ms');
+    const logqlLatency = new Trend('logql_query_duration_ms');
+    const traceLatency = new Trend('trace_query_duration_ms');
+
+    const promqlErrors = new Counter('promql_errors');
+    const logqlErrors = new Counter('logql_errors');
+    const traceErrors = new Counter('trace_errors');
+
+    export let options = {
+      vus: 1, 
+      duration: '120m', 
+      thresholds: {
+        'promql_query_duration_ms': ['p(95)<2000'], 
+        'logql_query_duration_ms': ['p(95)<3000'],
+        'trace_query_duration_ms': ['p(95)<2000'],
+        'http_req_failed': ['rate<0.05'], 
+      },
+    };
+
+    const STACK = __ENV.STACK || 'lgtm';
+
+    // Konfiguration basierend auf deiner kubectl get svc Ausgabe
+    const config = {
+      lgtm: {
+        // Prometheus Server läuft auf Port 80
+        promql: 'http://prometheus-server.observability-lgtm:80/api/v1/query',
+        // Loki Gateway läuft auf Port 80
+        logql: 'http://loki-gateway.observability-lgtm:80/loki/api/v1/query_range',
+        // Tempo Service nutzt Port 3200 für die HTTP API
+        trace: 'http://tempo.observability-lgtm:3200/api/search',
+      }
+    };
+
+    export default function () {
+      const now = Math.floor(Date.now() / 1000);
+      const fifteenMinAgo = now - (15 * 60);
+      
+      // 1. PromQL Query: CPU-Auslastung der OTEL-Demo
+      let promqlQuery = 'rate(container_cpu_usage_seconds_total{namespace="otel-demo-lgtm"}[5m])';
+      let promqlUrl = `${config[STACK].promql}?query=${encodeURIComponent(promqlQuery)}`;
+      
+      let promqlRes = http.get(promqlUrl);
+      promqlLatency.add(promqlRes.timings.duration);
+      if (!check(promqlRes, { 'PromQL status 200': (r) => r.status === 200 })) {
+        promqlErrors.add(1);
+      }
+      
+      sleep(20); 
+      
+      // 2. Log Query: Suche nach Fehlern in den Logs der Demo
+      let logqlQuery = '{namespace="otel-demo-lgtm"} |= "error"';
+      let logqlUrl = `${config[STACK].logql}?query=${encodeURIComponent(logqlQuery)}&start=${fifteenMinAgo}&end=${now}`;
+      
+      let logqlRes = http.get(logqlUrl);
+      logqlLatency.add(logqlRes.timings.duration);
+      if (!check(logqlRes, { 'LogQL status 200': (r) => r.status === 200 })) {
+        logqlErrors.add(1);
+      }
+      
+      sleep(20); 
+      
+      // 3. Trace Query: Suche nach Traces des Frontend-Services
+      let traceUrl = `${config[STACK].trace}?service=frontend&start=${fifteenMinAgo}&end=${now}&limit=100`;
+      
+      let traceRes = http.get(traceUrl);
+      traceLatency.add(traceRes.timings.duration);
+      if (!check(traceRes, { 'Trace status 200': (r) => r.status === 200 })) {
+        traceErrors.add(1);
+      }
+      
+      sleep(20); 
+    }
+
+    export function handleSummary(data) {
+      return {
+        '/results/summary.json': JSON.stringify(data, null, 2),
+        'stdout': textSummary(data, { indent: ' ', enableColors: true }),
+      };
+    }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: query-results-pvc
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: query-latency-lgtm
+  namespace: monitoring
+spec:
+  template:
+    metadata:
+      labels:
+        app: query-benchmark
+    spec:
+      # Dieser Teil ist neu und wichtig für die Schreibrechte auf dem PVC
+      securityContext:
+        fsGroup: 12345
+        runAsUser: 12345
+      restartPolicy: Never
+      containers:
+      - name: k6
+        image: grafana/k6:0.48.0
+        env:
+        - name: STACK
+          value: "lgtm"
+        command:
+        - k6
+        - run
+        - --out
+        - json=/results/results.json
+        - /scripts/query-benchmark.js
+        volumeMounts:
+        - name: scripts
+          mountPath: /scripts
+        - name: results
+          mountPath: /results
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: scripts
+        configMap:
+          name: k6-query-script
+      - name: results
+        persistentVolumeClaim:
+          claimName: query-results-pvc

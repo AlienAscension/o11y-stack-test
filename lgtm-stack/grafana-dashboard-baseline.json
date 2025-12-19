@@ -1,0 +1,1030 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "title": "CPU Auslastung",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "CPU (Millicores)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "m"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 0,
+        "y": 1
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) * 1000",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Usage pro Pod (Timeline)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 500
+              },
+              {
+                "color": "red",
+                "value": 1000
+              }
+            ]
+          },
+          "unit": "m"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) * 1000",
+          "refId": "A"
+        }
+      ],
+      "title": "Gesamt CPU (Namespace)",
+      "type": "stat"
+    },
+    {
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 101,
+      "title": "Memory Auslastung",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Memory (MiB)",
+            "fillOpacity": 10,
+            "lineWidth": 1
+          },
+          "unit": "decmbytes"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 0,
+        "y": 10
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}) / 1024 / 1024",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Memory Usage pro Pod",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1024
+              },
+              {
+                "color": "red",
+                "value": 2048
+              }
+            ]
+          },
+          "unit": "decmbytes"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 10
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}) / 1024 / 1024",
+          "refId": "A"
+        }
+      ],
+      "title": "Gesamt Memory (Namespace)",
+      "type": "stat"
+    },
+    {
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 102,
+      "title": "Disk I/O & Netzwerk",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "MiB/s",
+            "fillOpacity": 10,
+            "lineWidth": 1
+          },
+          "unit": "MiBs"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(container_fs_reads_bytes_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) / 1024 / 1024",
+          "legendFormat": "Read",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(container_fs_writes_bytes_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) / 1024 / 1024",
+          "legendFormat": "Write",
+          "refId": "B"
+        }
+      ],
+      "title": "Disk I/O (Namespace)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "MiB/s",
+            "fillOpacity": 10,
+            "lineWidth": 1
+          },
+          "unit": "MiBs"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(container_network_receive_bytes_total{namespace=\"observability-lgtm\"}[5m])) / 1024 / 1024",
+          "legendFormat": "Receive",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(container_network_transmit_bytes_total{namespace=\"observability-lgtm\"}[5m])) / 1024 / 1024",
+          "legendFormat": "Transmit",
+          "refId": "B"
+        }
+      ],
+      "title": "Netzwerk Throughput (Namespace)",
+      "type": "timeseries"
+    },
+    {
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "id": 103,
+      "title": "Disk I/O & Netzwerk pro Pod",
+      "type": "row",
+      "collapsed": true,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "MiB/s",
+                "fillOpacity": 10,
+                "lineWidth": 1
+              },
+              "unit": "MiBs"
+            }
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 28
+          },
+          "id": 8,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "right"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (pod) (rate(container_fs_reads_bytes_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m]) + rate(container_fs_writes_bytes_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) / 1024 / 1024",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Disk I/O pro Pod (Read + Write)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "MiB/s",
+                "fillOpacity": 10,
+                "lineWidth": 1
+              },
+              "unit": "MiBs"
+            }
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 28
+          },
+          "id": 9,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "right"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (pod) (rate(container_network_receive_bytes_total{namespace=\"observability-lgtm\"}[5m]) + rate(container_network_transmit_bytes_total{namespace=\"observability-lgtm\"}[5m])) / 1024 / 1024",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Netzwerk Throughput pro Pod (RX + TX)",
+          "type": "timeseries"
+        }
+      ]
+    },
+    {
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "id": 104,
+      "title": "Baseline Statistiken (Export für LaTeX)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Ressourcenverbrauch-Übersicht aller Komponenten mit statistischen Werten (Durchschnitt, P95, Maximum) über den ausgewählten Zeitbereich. Diese Tabelle kann direkt für Baseline-Dokumentation exportiert werden.",
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 7,
+      "options": {
+        "footer": {
+          "show": true,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Pod",
+            "desc": false
+          }
+        ]
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg_over_time((sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) * 1000)[$__range:])",
+          "legendFormat": "{{pod}}",
+          "refId": "CPU_AVG",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "quantile_over_time(0.95, (sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) * 1000)[$__range:])",
+          "legendFormat": "{{pod}}",
+          "refId": "CPU_P95",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max_over_time((sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) * 1000)[$__range:])",
+          "legendFormat": "{{pod}}",
+          "refId": "CPU_MAX",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg_over_time((sum by (pod) (container_memory_working_set_bytes{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}) / 1024 / 1024)[$__range:])",
+          "legendFormat": "{{pod}}",
+          "refId": "MEM_AVG",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "quantile_over_time(0.95, (sum by (pod) (container_memory_working_set_bytes{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}) / 1024 / 1024)[$__range:])",
+          "legendFormat": "{{pod}}",
+          "refId": "MEM_P95",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max_over_time((sum by (pod) (container_memory_working_set_bytes{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}) / 1024 / 1024)[$__range:])",
+          "legendFormat": "{{pod}}",
+          "refId": "MEM_MAX",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg_over_time((sum by (pod) (rate(container_fs_reads_bytes_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) / 1024 / 1024)[$__range:])",
+          "legendFormat": "{{pod}}",
+          "refId": "DISK_READ_AVG",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg_over_time((sum by (pod) (rate(container_fs_writes_bytes_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) / 1024 / 1024)[$__range:])",
+          "legendFormat": "{{pod}}",
+          "refId": "DISK_WRITE_AVG",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max_over_time((sum by (pod) (rate(container_fs_writes_bytes_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) / 1024 / 1024)[$__range:])",
+          "legendFormat": "{{pod}}",
+          "refId": "DISK_WRITE_MAX",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg_over_time((sum by (pod) (rate(container_network_receive_bytes_total{namespace=\"observability-lgtm\"}[5m])) / 1024 / 1024)[$__range:])",
+          "legendFormat": "{{pod}}",
+          "refId": "NET_RX_AVG",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg_over_time((sum by (pod) (rate(container_network_transmit_bytes_total{namespace=\"observability-lgtm\"}[5m])) / 1024 / 1024)[$__range:])",
+          "legendFormat": "{{pod}}",
+          "refId": "NET_TX_AVG",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max_over_time((sum by (pod) (rate(container_network_transmit_bytes_total{namespace=\"observability-lgtm\"}[5m])) / 1024 / 1024)[$__range:])",
+          "legendFormat": "{{pod}}",
+          "refId": "NET_TX_MAX",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "seriesToColumns",
+          "options": {
+            "byField": "pod"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "pod": 0,
+              "Value #CPU_AVG": 1,
+              "Value #CPU_P95": 2,
+              "Value #CPU_MAX": 3,
+              "Value #MEM_AVG": 4,
+              "Value #MEM_P95": 5,
+              "Value #MEM_MAX": 6,
+              "Value #DISK_READ_AVG": 7,
+              "Value #DISK_WRITE_AVG": 8,
+              "Value #DISK_WRITE_MAX": 9,
+              "Value #NET_RX_AVG": 10,
+              "Value #NET_TX_AVG": 11,
+              "Value #NET_TX_MAX": 12
+            },
+            "renameByName": {
+              "pod": "Pod",
+              "Value #CPU_AVG": "CPU Ø (m)",
+              "Value #CPU_P95": "CPU P95 (m)",
+              "Value #CPU_MAX": "CPU Max (m)",
+              "Value #MEM_AVG": "Mem Ø (MiB)",
+              "Value #MEM_P95": "Mem P95 (MiB)",
+              "Value #MEM_MAX": "Mem Max (MiB)",
+              "Value #DISK_READ_AVG": "Disk Read Ø (MiB/s)",
+              "Value #DISK_WRITE_AVG": "Disk Write Ø (MiB/s)",
+              "Value #DISK_WRITE_MAX": "Disk Write Max (MiB/s)",
+              "Value #NET_RX_AVG": "Net RX Ø (MiB/s)",
+              "Value #NET_TX_AVG": "Net TX Ø (MiB/s)",
+              "Value #NET_TX_MAX": "Net TX Max (MiB/s)"
+            }
+          }
+        }
+      ],
+      "title": "Ressourcen-Statistik pro Komponente (Avg, P95, Max)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Gesamte Ressourcennutzung des observability-lgtm Namespaces über den ausgewählten Zeitbereich.",
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 41
+      },
+      "id": 10,
+      "options": {
+        "showHeader": true
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg_over_time((sum(rate(container_cpu_usage_seconds_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) * 1000)[$__range:])",
+          "refId": "CPU_AVG",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max_over_time((sum(rate(container_cpu_usage_seconds_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) * 1000)[$__range:])",
+          "refId": "CPU_MAX",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg_over_time((sum(container_memory_working_set_bytes{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}) / 1024 / 1024)[$__range:])",
+          "refId": "MEM_AVG",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max_over_time((sum(container_memory_working_set_bytes{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}) / 1024 / 1024)[$__range:])",
+          "refId": "MEM_MAX",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg_over_time((sum(rate(container_fs_reads_bytes_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) / 1024 / 1024)[$__range:])",
+          "refId": "DISK_READ_AVG",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg_over_time((sum(rate(container_fs_writes_bytes_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) / 1024 / 1024)[$__range:])",
+          "refId": "DISK_WRITE_AVG",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max_over_time((sum(rate(container_fs_writes_bytes_total{namespace=\"observability-lgtm\", container!=\"\", container!=\"POD\"}[5m])) / 1024 / 1024)[$__range:])",
+          "refId": "DISK_WRITE_MAX",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg_over_time((sum(rate(container_network_receive_bytes_total{namespace=\"observability-lgtm\"}[5m])) / 1024 / 1024)[$__range:])",
+          "refId": "NET_RX_AVG",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg_over_time((sum(rate(container_network_transmit_bytes_total{namespace=\"observability-lgtm\"}[5m])) / 1024 / 1024)[$__range:])",
+          "refId": "NET_TX_AVG",
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max_over_time((sum(rate(container_network_transmit_bytes_total{namespace=\"observability-lgtm\"}[5m])) / 1024 / 1024)[$__range:])",
+          "refId": "NET_TX_MAX",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "seriesToRows"
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "Metric": "Metrik",
+              "Value": "Wert"
+            }
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "Metric": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "Value": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "Metric": "Ressource",
+              "Value (lastNotNull)": "Wert",
+              "CPU_AVG": "CPU Durchschnitt (Millicores)",
+              "CPU_MAX": "CPU Maximum (Millicores)",
+              "MEM_AVG": "Memory Durchschnitt (MiB)",
+              "MEM_MAX": "Memory Maximum (MiB)",
+              "DISK_READ_AVG": "Disk Read Durchschnitt (MiB/s)",
+              "DISK_WRITE_AVG": "Disk Write Durchschnitt (MiB/s)",
+              "DISK_WRITE_MAX": "Disk Write Maximum (MiB/s)",
+              "NET_RX_AVG": "Network Receive Durchschnitt (MiB/s)",
+              "NET_TX_AVG": "Network Transmit Durchschnitt (MiB/s)",
+              "NET_TX_MAX": "Network Transmit Maximum (MiB/s)"
+            }
+          }
+        }
+      ],
+      "title": "Namespace Gesamt-Statistik (Summe aller Pods)",
+      "type": "table"
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "lgtm",
+    "kubernetes",
+    "baseline",
+    "observability"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Data Source",
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "1h",
+          "value": "1h"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Baseline Zeitfenster",
+        "name": "baseline_window",
+        "options": [
+          {
+            "selected": false,
+            "text": "15m",
+            "value": "15m"
+          },
+          {
+            "selected": false,
+            "text": "30m",
+            "value": "30m"
+          },
+          {
+            "selected": true,
+            "text": "1h",
+            "value": "1h"
+          },
+          {
+            "selected": false,
+            "text": "2h",
+            "value": "2h"
+          },
+          {
+            "selected": false,
+            "text": "6h",
+            "value": "6h"
+          },
+          {
+            "selected": false,
+            "text": "12h",
+            "value": "12h"
+          },
+          {
+            "selected": false,
+            "text": "24h",
+            "value": "24h"
+          }
+        ],
+        "query": "15m,30m,1h,2h,6h,12h,24h",
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "3h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "LGTM Stack - Baseline Monitoring (Optimiert)",
+  "uid": "lgtm-baseline-optimized",
+  "version": 1
+}

@@ -1,0 +1,193 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k6-query-script
+  namespace: monitoring
+data:
+  query-benchmark.js: |
+    import http from 'k6/http';
+    import { check, sleep } from 'k6';
+    import { Trend, Counter } from 'k6/metrics';
+
+    // Custom Metrics für jeden Query-Typ
+    const promqlLatency = new Trend('promql_query_duration_ms');
+    const logqlLatency = new Trend('logql_query_duration_ms');
+    const traceLatency = new Trend('trace_query_duration_ms');
+
+    const promqlErrors = new Counter('promql_errors');
+    const logqlErrors = new Counter('logql_errors');
+    const traceErrors = new Counter('trace_errors');
+
+    export let options = {
+      vus: 1,  // Ein virtueller User
+      duration: '60m',  // 60 Minuten für Baseline
+      thresholds: {
+        'promql_query_duration_ms': ['p(95)<2000'],  // 95% unter 2s
+        'logql_query_duration_ms': ['p(95)<3000'],
+        'trace_query_duration_ms': ['p(95)<2000'],
+        'http_req_failed': ['rate<0.05'],  // Max 5% Fehler
+      },
+    };
+
+    // Stack-Konfiguration
+    const STACK = __ENV.STACK || 'lgtm';
+
+    const config = {
+      lgtm: {
+        promql: 'http://prometheus-server.observability-lgtm.svc.cluster.local/api/v1/query',
+        logql: 'http://loki-gateway.observability-lgtm.svc.cluster.local/loki/api/v1/query_range',
+        trace: 'http://tempo.observability-lgtm.svc.cluster.local:3200/api/search',
+      },
+    };
+
+    export default function () {
+      const now = Math.floor(Date.now() / 1000);
+      const fifteenMinAgo = now - (15 * 60);
+      
+      // 1. PromQL Query: CPU-Auslastung über 5 Minuten
+      let promqlQuery = 'rate(container_cpu_usage_seconds_total{namespace="observability-lgtm"}[5m])';
+      let promqlUrl = `${config[STACK].promql}?query=${encodeURIComponent(promqlQuery)}&time=${now}`;
+      
+      let promqlStart = Date.now();
+      let promqlRes = http.get(promqlUrl, {
+        timeout: '30s',
+        tags: { query_type: 'promql' }
+      });
+      let promqlDuration = Date.now() - promqlStart;
+      promqlLatency.add(promqlDuration);
+      
+      let promqlSuccess = check(promqlRes, { 
+        'PromQL status 200': (r) => r.status === 200,
+        'PromQL has data': (r) => r.json('data.result') !== undefined
+      });
+      
+      if (!promqlSuccess) {
+        promqlErrors.add(1);
+        console.log(`PromQL Error: ${promqlRes.status} - ${promqlRes.body.substring(0, 200)}`);
+      }
+      
+      sleep(20);  // 20 Sekunden warten
+      
+      // 2. LogQL Query für Loki
+      let logqlQuery = '{namespace="observability-lgtm"}';
+      let logqlUrl = `${config[STACK].logql}?query=${encodeURIComponent(logqlQuery)}&start=${fifteenMinAgo}000000000&end=${now}000000000&limit=100`;
+      
+      let logqlStart = Date.now();
+      let logqlRes = http.get(logqlUrl, {
+        timeout: '30s',
+        tags: { query_type: 'logql' }
+      });
+      let logqlDuration = Date.now() - logqlStart;
+      logqlLatency.add(logqlDuration);
+      
+      let logqlSuccess = check(logqlRes, { 
+        'LogQL status 200': (r) => r.status === 200,
+        'LogQL has data': (r) => r.json('data.result') !== undefined || r.json('data.streams') !== undefined
+      });
+      
+      if (!logqlSuccess) {
+        logqlErrors.add(1);
+        console.log(`LogQL Error: ${logqlRes.status} - ${logqlRes.body.substring(0, 200)}`);
+      }
+      
+      sleep(20);  // 20 Sekunden warten
+      
+      // 3. Trace Query für Tempo
+      let traceUrl = `${config[STACK].trace}?tags=service.name%3Dloki&start=${fifteenMinAgo}&end=${now}&limit=20`;
+      
+      let traceStart = Date.now();
+      let traceRes = http.get(traceUrl, {
+        timeout: '30s',
+        tags: { query_type: 'trace' }
+      });
+      let traceDuration = Date.now() - traceStart;
+      traceLatency.add(traceDuration);
+      
+      let traceSuccess = check(traceRes, { 
+        'Trace status 200': (r) => r.status === 200 || r.status === 404  // 404 ist OK wenn keine Traces
+      });
+      
+      if (!traceSuccess) {
+        traceErrors.add(1);
+        console.log(`Trace Error: ${traceRes.status} - ${traceRes.body.substring(0, 200)}`);
+      }
+      
+      sleep(20);  // 20 Sekunden warten, insgesamt 60s pro Iteration
+    }
+
+    export function handleSummary(data) {
+      console.log('=== Query Performance Summary ===');
+      console.log(`PromQL P95: ${data.metrics.promql_query_duration_ms.values['p(95)'].toFixed(2)}ms`);
+      console.log(`LogQL P95: ${data.metrics.logql_query_duration_ms.values['p(95)'].toFixed(2)}ms`);
+      console.log(`Trace P95: ${data.metrics.trace_query_duration_ms.values['p(95)'].toFixed(2)}ms`);
+      
+      return {
+        '/results/summary.json': JSON.stringify(data, null, 2),
+      };
+    }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: query-results-pvc
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: query-latency-lgtm
+  namespace: monitoring
+  labels:
+    app: query-benchmark
+    stack: lgtm
+spec:
+  backoffLimit: 2  # Max 2 Retries
+  ttlSecondsAfterFinished: 86400  # Job bleibt 24h nach Completion
+  template:
+    metadata:
+      labels:
+        app: query-benchmark
+        stack: lgtm
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: k6
+        image: grafana/k6:0.48.0
+        env:
+        - name: STACK
+          value: "lgtm"
+        - name: K6_NO_USAGE_REPORT
+          value: "true"
+        command:
+        - k6
+        - run
+        - --out
+        - json=/results/results.json
+        - --summary-export=/results/summary.json
+        - /scripts/query-benchmark.js
+        volumeMounts:
+        - name: scripts
+          mountPath: /scripts
+        - name: results
+          mountPath: /results
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: scripts
+        configMap:
+          name: k6-query-script
+      - name: results
+        persistentVolumeClaim:
+          claimName: query-results-pvc
