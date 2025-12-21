@@ -1,0 +1,122 @@
+"Time","alloy-2ct9f","alloy-4b22f","alloy-qq9ts","grafana-586f5d7949-5mstz","loki-0","loki-canary-dzb69","loki-canary-n7cg9","loki-canary-wvhgm","loki-chunks-cache-0","loki-gateway-655d5c6cd9-whjvm","loki-results-cache-0","prometheus-kube-state-metrics-6c848bf576-pldq7","prometheus-kube-state-metrics-6c848bf576-txmvx","prometheus-prometheus-pushgateway-849f5c884c-9wjnd","prometheus-prometheus-pushgateway-849f5c884c-h2hlt","prometheus-server-5cb76b849-dcztt","tempo-0"
+2025-12-19 17:30:00,4.98 min,5.51 min,4.77 min,3.75 min,26.1 min,1.60 min,1.49 min,1.59 min,3.12 min,3.23 min,2.13 min,1.28 min,,,0.111 min,0.789 min,3.08 min
+2025-12-19 17:30:30,5.91 min,6.43 min,6.23 min,3.70 min,26.7 min,1.69 min,1.54 min,1.65 min,3.18 min,3.53 min,2.16 min,1.26 min,,,0.108 min,0.841 min,3.05 min
+2025-12-19 17:31:00,6.58 min,7.44 min,7.17 min,3.62 min,27.3 min,1.75 min,1.52 min,1.68 min,3.24 min,3.62 min,2.16 min,1.28 min,,,0.104 min,0.850 min,3.07 min
+2025-12-19 17:31:30,7.28 min,8.04 min,7.81 min,3.62 min,28.3 min,1.78 min,1.62 min,1.66 min,3.26 min,3.68 min,2.09 min,1.29 min,,,0.110 min,0.827 min,3.16 min
+2025-12-19 17:32:00,7.98 min,8.92 min,8.58 min,3.79 min,29.1 min,1.92 min,1.65 min,1.71 min,3.31 min,3.89 min,2.19 min,1.31 min,,,0.114 min,0.814 min,3.19 min
+2025-12-19 17:32:30,8.89 min,10.0 min,9.55 min,3.76 min,28.1 min,1.90 min,1.70 min,1.69 min,3.29 min,3.99 min,2.24 min,1.31 min,,,0.113 min,0.858 min,3.18 min
+2025-12-19 17:33:00,8.92 min,10.2 min,9.88 min,3.66 min,28.6 min,2.01 min,1.69 min,1.74 min,3.28 min,4.08 min,2.23 min,1.32 min,,,0.113 min,0.815 min,3.20 min
+2025-12-19 17:33:30,8.95 min,10.3 min,10.2 min,3.63 min,27.9 min,1.99 min,1.70 min,1.76 min,3.29 min,4.16 min,2.25 min,1.32 min,,,0.113 min,0.847 min,3.27 min
+2025-12-19 17:34:00,9.47 min,11.0 min,10.9 min,3.78 min,28.7 min,2.02 min,1.74 min,1.79 min,3.29 min,4.33 min,2.28 min,1.32 min,,,0.119 min,0.851 min,3.30 min
+2025-12-19 17:34:30,10.1 min,11.8 min,11.5 min,3.65 min,25.4 min,2.23 min,1.76 min,1.82 min,3.08 min,4.40 min,2.27 min,1.31 min,,,0.113 min,0.884 min,3.29 min
+2025-12-19 17:35:00,9.55 min,11.1 min,11.1 min,3.57 min,23.5 min,2.26 min,1.78 min,1.82 min,3.14 min,4.38 min,2.28 min,1.34 min,,,0.112 min,0.843 min,3.29 min
+2025-12-19 17:35:30,9.45 min,10.9 min,10.7 min,3.48 min,23.3 min,2.24 min,1.79 min,1.69 min,3.19 min,4.39 min,2.29 min,1.34 min,,,0.112 min,0.856 min,3.35 min
+2025-12-19 17:36:00,9.32 min,10.7 min,10.3 min,3.60 min,24.9 min,2.19 min,1.76 min,1.78 min,3.17 min,4.36 min,2.29 min,1.39 min,,,0.117 min,0.847 min,3.35 min
+2025-12-19 17:36:30,9.57 min,10.9 min,10.5 min,3.56 min,23.1 min,2.09 min,1.74 min,1.77 min,3.16 min,4.28 min,2.26 min,1.35 min,,,0.117 min,0.885 min,3.31 min
+2025-12-19 17:37:00,9.34 min,10.8 min,10.2 min,3.66 min,24.0 min,2.07 min,1.78 min,1.73 min,3.14 min,4.35 min,2.27 min,1.46 min,,,0.123 min,0.876 min,3.32 min
+2025-12-19 17:37:30,9.72 min,10.6 min,10.2 min,3.61 min,23.8 min,2.02 min,1.80 min,1.77 min,3.16 min,4.33 min,2.28 min,1.51 min,,,0.126 min,0.851 min,3.36 min
+2025-12-19 17:38:00,9.54 min,10.7 min,9.90 min,3.65 min,25.0 min,1.96 min,1.84 min,1.73 min,3.18 min,4.29 min,2.29 min,1.52 min,,,0.141 min,0.831 min,3.38 min
+2025-12-19 17:38:30,9.50 min,10.9 min,9.79 min,3.74 min,24.7 min,1.89 min,1.83 min,1.73 min,3.22 min,4.25 min,2.28 min,1.57 min,,,0.146 min,0.852 min,3.34 min
+2025-12-19 17:39:00,9.57 min,10.6 min,9.24 min,3.72 min,24.8 min,1.85 min,1.86 min,1.74 min,3.22 min,4.21 min,2.32 min,1.61 min,,,0.152 min,0.819 min,3.37 min
+2025-12-19 17:39:30,9.44 min,10.5 min,9.10 min,3.66 min,24.6 min,1.51 min,1.83 min,1.67 min,3.15 min,4.08 min,2.29 min,1.64 min,,,0.159 min,0.825 min,3.43 min
+2025-12-19 17:40:00,9.08 min,10.6 min,9.03 min,4.06 min,25.5 min,1.56 min,1.84 min,1.64 min,3.21 min,4.13 min,2.27 min,1.69 min,,,0.173 min,0.816 min,3.44 min
+2025-12-19 17:40:30,9.64 min,10.8 min,9.06 min,4.04 min,25.5 min,1.43 min,1.85 min,1.59 min,3.22 min,4.11 min,2.26 min,1.71 min,,,0.172 min,0.840 min,3.41 min
+2025-12-19 17:41:00,10.0 min,11.2 min,9.17 min,3.89 min,25.7 min,1.44 min,1.86 min,1.66 min,3.23 min,4.13 min,2.30 min,1.72 min,,,0.180 min,0.830 min,3.42 min
+2025-12-19 17:41:30,10.4 min,11.5 min,8.68 min,3.86 min,25.7 min,1.46 min,1.83 min,1.60 min,3.26 min,4.10 min,2.31 min,1.71 min,,,0.178 min,0.838 min,3.49 min
+2025-12-19 17:42:00,10.00 min,11.1 min,8.93 min,4.00 min,25.6 min,1.48 min,1.85 min,1.64 min,3.22 min,4.09 min,2.24 min,1.71 min,,,0.185 min,0.808 min,3.51 min
+2025-12-19 17:42:30,10.2 min,11.2 min,9.13 min,4.01 min,25.5 min,1.50 min,1.88 min,1.63 min,3.17 min,4.12 min,2.30 min,1.69 min,,,0.188 min,0.845 min,3.46 min
+2025-12-19 17:43:00,10.1 min,11.3 min,9.07 min,3.97 min,25.6 min,1.51 min,1.89 min,1.55 min,3.24 min,3.90 min,2.30 min,1.74 min,,,0.182 min,0.838 min,3.46 min
+2025-12-19 17:43:30,10.2 min,11.4 min,9.06 min,3.95 min,26.0 min,1.52 min,1.88 min,1.68 min,3.21 min,4.14 min,2.30 min,1.76 min,,,0.185 min,0.846 min,3.50 min
+2025-12-19 17:44:00,10.2 min,11.4 min,9.10 min,3.90 min,25.6 min,1.50 min,1.88 min,1.66 min,3.30 min,4.12 min,2.30 min,1.75 min,,,0.191 min,0.830 min,3.51 min
+2025-12-19 17:44:30,10.4 min,11.3 min,9.18 min,3.76 min,26.2 min,1.44 min,1.89 min,1.60 min,3.32 min,4.12 min,2.29 min,1.76 min,,,0.190 min,0.858 min,3.43 min
+2025-12-19 17:45:00,10.0 min,10.9 min,8.80 min,3.66 min,29.2 min,1.53 min,1.90 min,1.67 min,3.35 min,4.12 min,2.31 min,1.75 min,,,0.191 min,0.856 min,3.43 min
+2025-12-19 17:45:30,9.83 min,10.8 min,8.71 min,3.67 min,29.5 min,1.42 min,1.87 min,1.63 min,3.33 min,4.10 min,2.28 min,1.72 min,,,0.191 min,0.845 min,3.33 min
+2025-12-19 17:46:00,9.66 min,10.4 min,8.47 min,3.83 min,29.4 min,1.47 min,1.94 min,1.66 min,3.32 min,4.10 min,2.34 min,1.70 min,,,0.207 min,0.825 min,3.48 min
+2025-12-19 17:46:30,9.93 min,10.6 min,8.55 min,3.77 min,29.9 min,1.48 min,1.90 min,1.69 min,3.32 min,4.06 min,2.31 min,1.70 min,,,0.204 min,0.866 min,3.44 min
+2025-12-19 17:47:00,9.79 min,10.5 min,8.64 min,3.65 min,29.6 min,1.52 min,1.91 min,1.67 min,3.30 min,4.11 min,2.32 min,1.65 min,,,0.199 min,0.863 min,3.44 min
+2025-12-19 17:47:30,9.44 min,10.4 min,8.54 min,3.61 min,28.7 min,1.55 min,1.94 min,1.68 min,3.30 min,4.08 min,2.28 min,1.63 min,,,0.195 min,0.855 min,3.49 min
+2025-12-19 17:48:00,9.21 min,10.2 min,8.44 min,3.63 min,29.8 min,1.54 min,1.88 min,1.68 min,3.33 min,4.08 min,2.33 min,1.61 min,,,0.209 min,0.827 min,3.49 min
+2025-12-19 17:48:30,9.34 min,10.3 min,8.39 min,3.74 min,28.9 min,1.48 min,1.98 min,1.62 min,3.31 min,4.09 min,2.33 min,1.62 min,,,0.209 min,0.864 min,3.44 min
+2025-12-19 17:49:00,9.28 min,9.94 min,8.37 min,3.66 min,29.5 min,1.53 min,1.98 min,1.66 min,3.30 min,4.09 min,2.30 min,1.61 min,,,0.204 min,0.850 min,3.43 min
+2025-12-19 17:49:30,9.69 min,10.3 min,8.75 min,3.64 min,25.0 min,1.51 min,1.97 min,1.64 min,3.23 min,4.02 min,2.29 min,1.61 min,,,0.203 min,0.851 min,3.43 min
+2025-12-19 17:50:00,9.44 min,10.2 min,8.70 min,3.89 min,25.1 min,1.53 min,1.96 min,1.64 min,3.25 min,4.10 min,2.27 min,1.65 min,,,0.202 min,0.831 min,3.48 min
+2025-12-19 17:50:30,9.87 min,10.9 min,8.81 min,3.86 min,25.0 min,1.48 min,1.95 min,1.66 min,3.25 min,4.10 min,2.33 min,1.66 min,,,0.208 min,0.853 min,3.37 min
+2025-12-19 17:51:00,9.97 min,11.2 min,9.10 min,3.75 min,25.1 min,1.49 min,1.95 min,1.64 min,3.25 min,4.13 min,2.34 min,1.65 min,,,0.182 min,0.841 min,3.32 min
+2025-12-19 17:51:30,10.0 min,11.3 min,9.01 min,3.74 min,24.8 min,1.44 min,1.97 min,1.63 min,3.28 min,4.05 min,2.33 min,1.65 min,,,0.182 min,0.839 min,3.30 min
+2025-12-19 17:52:00,10.4 min,11.8 min,9.01 min,3.67 min,24.9 min,1.50 min,1.97 min,1.65 min,3.24 min,4.14 min,2.34 min,1.71 min,,,0.181 min,0.811 min,3.29 min
+2025-12-19 17:52:30,10.9 min,12.3 min,9.59 min,3.90 min,24.1 min,1.48 min,1.87 min,1.65 min,3.32 min,4.13 min,2.37 min,1.71 min,,,0.201 min,0.848 min,3.21 min
+2025-12-19 17:53:00,11.0 min,12.8 min,10.1 min,3.67 min,24.8 min,1.46 min,1.91 min,1.64 min,3.31 min,4.07 min,2.35 min,1.70 min,,,0.183 min,0.873 min,3.18 min
+2025-12-19 17:53:30,11.9 min,13.5 min,10.5 min,3.79 min,24.9 min,1.46 min,1.91 min,1.63 min,3.26 min,4.10 min,2.31 min,1.68 min,,,0.189 min,0.849 min,3.13 min
+2025-12-19 17:54:00,12.1 min,13.6 min,10.7 min,3.81 min,25.3 min,1.48 min,1.99 min,1.63 min,3.36 min,3.97 min,2.36 min,1.78 min,,,0.196 min,0.893 min,3.25 min
+2025-12-19 17:54:30,12.0 min,13.5 min,11.7 min,3.73 min,24.7 min,1.49 min,2.01 min,1.58 min,3.31 min,4.01 min,2.69 min,1.96 min,,,0.251 min,1.40 min,3.31 min
+2025-12-19 17:55:00,11.4 min,13.1 min,11.9 min,3.65 min,24.0 min,1.44 min,2.42 min,1.63 min,3.30 min,3.86 min,4.55 min,1.80 min,,,1.07 min,3.34 min,3.09 min
+2025-12-19 17:55:30,10.2 min,11.7 min,16.3 min,3.67 min,22.7 min,1.48 min,2.27 min,1.61 min,3.21 min,3.61 min,7.21 min,2.29 min,,,1.09 min,12.9 min,3.38 min
+2025-12-19 17:56:00,9.69 min,11.6 min,17.4 min,3.80 min,22.5 min,1.50 min,2.88 min,1.57 min,3.24 min,3.57 min,11.8 min,2.15 min,,,1.08 min,20.6 min,3.09 min
+2025-12-19 17:56:30,9.67 min,11.3 min,17.1 min,3.79 min,21.9 min,1.49 min,2.70 min,1.63 min,3.32 min,3.46 min,11.9 min,1.98 min,,,1.08 min,20.9 min,2.96 min
+2025-12-19 17:57:00,8.48 min,9.48 min,16.5 min,3.73 min,21.4 min,1.50 min,2.53 min,1.65 min,3.21 min,3.24 min,11.8 min,1.78 min,,,1.04 min,20.3 min,2.66 min
+2025-12-19 17:57:30,7.90 min,9.02 min,15.1 min,3.69 min,21.3 min,1.53 min,2.33 min,1.62 min,3.24 min,3.14 min,11.5 min,1.64 min,,,1.05 min,21.0 min,2.38 min
+2025-12-19 17:58:00,6.99 min,8.13 min,14.3 min,3.82 min,20.9 min,1.55 min,2.19 min,1.65 min,3.27 min,2.97 min,11.6 min,1.52 min,,,1.10 min,21.8 min,2.10 min
+2025-12-19 17:58:30,6.17 min,6.96 min,27.8 min,3.81 min,20.0 min,1.53 min,4.94 min,1.64 min,3.26 min,2.72 min,34.5 min,1.35 min,,,1.17 min,49.7 min,1.72 min
+2025-12-19 17:59:00,5.61 min,6.68 min,28.7 min,3.74 min,19.9 min,1.52 min,5.05 min,1.65 min,3.24 min,2.76 min,37.0 min,1.63 min,,,1.30 min,51.2 min,2.10 min
+2025-12-19 17:59:30,5.60 min,6.32 min,28.4 min,3.74 min,19.2 min,1.49 min,5.21 min,1.68 min,3.23 min,2.67 min,41.4 min,0.690 min,,,1.56 min,57.0 min,1.06 min
+2025-12-19 18:00:00,5.62 min,6.50 min,28.1 min,3.90 min,22.8 min,1.54 min,5.11 min,1.67 min,3.31 min,2.67 min,39.5 min,0.786 min,,,0.691 min,59.4 min,1.16 min
+2025-12-19 18:00:30,5.42 min,6.14 min,24.4 min,3.89 min,23.2 min,1.54 min,4.46 min,1.71 min,3.31 min,2.64 min,36.3 min,0.786 min,,,0.691 min,49.6 min,1.16 min
+2025-12-19 18:01:00,5.06 min,5.36 min,22.6 min,3.83 min,22.3 min,1.48 min,1.21 min,1.73 min,3.35 min,2.51 min,10.3 min,0.786 min,,,0.691 min,48.2 min,0.957 min
+2025-12-19 18:01:30,5.02 min,5.34 min,6.28 min,3.81 min,21.5 min,1.50 min,1.21 min,1.69 min,3.32 min,2.46 min,10.3 min,0.786 min,,,0.691 min,22.8 min,0.957 min
+2025-12-19 18:02:00,5.10 min,5.51 min,6.28 min,3.94 min,22.8 min,1.53 min,1.21 min,1.71 min,3.20 min,2.28 min,10.3 min,0.786 min,,,0.691 min,22.8 min,0.957 min
+2025-12-19 18:02:30,5.00 min,5.20 min,6.28 min,3.94 min,21.2 min,1.52 min,1.21 min,1.65 min,3.31 min,2.35 min,10.3 min,0.786 min,,,0.691 min,22.8 min,0.957 min
+2025-12-19 18:03:00,4.77 min,5.12 min,6.26 min,3.78 min,22.0 min,1.51 min,1.33 min,1.72 min,3.16 min,2.39 min,11.0 min,0.786 min,,,0.691 min,1.09 hours,0.957 min
+2025-12-19 18:03:30,4.00 min,4.11 min,19.7 min,3.85 min,20.6 min,1.50 min,2.04 min,1.71 min,3.30 min,2.26 min,55.2 min,1.61 min,,,1.79 min,1.53 hours,1.60 min
+2025-12-19 18:04:00,4.02 min,4.16 min,19.4 min,3.92 min,21.3 min,1.52 min,1.76 min,1.78 min,3.36 min,2.26 min,52.6 min,1.50 min,,,1.47 min,1.29 hours,1.49 min
+2025-12-19 18:04:30,4.59 min,4.59 min,11.6 min,3.97 min,18.2 min,1.45 min,1.82 min,1.71 min,3.29 min,2.27 min,1.98 min,1.24 min,,,0.252 min,44.6 min,0.265 min
+2025-12-19 18:05:00,4.72 min,4.96 min,9.55 min,3.89 min,18.4 min,1.52 min,0.781 min,1.79 min,3.35 min,2.38 min,2.18 min,0.200 min,,,0.228 min,0.332 min,0.265 min
+2025-12-19 18:05:30,4.79 min,5.03 min,9.55 min,3.81 min,18.3 min,1.52 min,0.763 min,1.75 min,3.31 min,2.38 min,2.19 min,0.198 min,,,0.228 min,0.332 min,0.265 min
+2025-12-19 18:06:00,4.73 min,4.81 min,14.5 min,3.85 min,18.5 min,1.50 min,1.25 min,1.75 min,3.22 min,2.40 min,2.69 min,0.190 min,,,0.228 min,0.332 min,0.265 min
+2025-12-19 18:06:30,4.68 min,4.91 min,15.3 min,3.89 min,17.9 min,1.54 min,1.30 min,1.78 min,3.27 min,2.45 min,2.69 min,0.193 min,,,0.228 min,0.332 min,0.265 min
+2025-12-19 18:07:00,4.56 min,4.80 min,18.5 min,3.81 min,18.4 min,1.54 min,1.61 min,1.76 min,3.30 min,2.40 min,3.26 min,0.176 min,,,0.228 min,0.332 min,0.265 min
+2025-12-19 18:07:30,4.98 min,5.32 min,19.9 min,3.76 min,17.5 min,1.53 min,1.77 min,1.75 min,3.37 min,2.49 min,3.41 min,0.186 min,,,0.228 min,0.378 min,0.265 min
+2025-12-19 18:08:00,5.38 min,5.75 min,21.4 min,3.87 min,18.4 min,1.54 min,2.02 min,1.69 min,3.34 min,2.52 min,4.44 min,0.182 min,,,0.245 min,0.662 min,0.263 min
+2025-12-19 18:08:30,5.35 min,5.78 min,21.2 min,3.78 min,17.8 min,1.49 min,1.92 min,1.72 min,3.28 min,2.54 min,3.42 min,0.0961 min,,,0.0878 min,0.756 min,0.0385 min
+2025-12-19 18:09:00,5.37 min,5.74 min,21.1 min,3.67 min,18.3 min,1.55 min,1.98 min,1.71 min,3.27 min,2.55 min,3.64 min,0 min,,,,0.813 min,
+2025-12-19 18:09:30,4.88 min,5.25 min,19.9 min,3.65 min,18.1 min,1.49 min,1.99 min,1.64 min,3.28 min,2.44 min,4.02 min,0 min,,,,1.05 min,
+2025-12-19 18:10:00,4.84 min,5.11 min,14.9 min,3.74 min,18.2 min,1.54 min,1.64 min,1.69 min,3.31 min,2.51 min,4.00 min,0 min,,,,1.25 min,
+2025-12-19 18:10:30,4.85 min,5.10 min,14.9 min,3.84 min,18.1 min,1.52 min,1.88 min,1.64 min,3.30 min,2.52 min,4.51 min,0 min,,,,1.49 min,
+2025-12-19 18:11:00,4.75 min,5.04 min,15.3 min,3.74 min,18.0 min,1.53 min,1.62 min,1.69 min,3.35 min,2.52 min,4.42 min,0 min,,,,1.72 min,
+2025-12-19 18:11:30,4.77 min,5.02 min,17.3 min,3.66 min,18.1 min,1.51 min,2.11 min,1.68 min,3.27 min,2.52 min,4.98 min,0 min,,,,1.89 min,
+2025-12-19 18:12:00,4.74 min,4.86 min,16.7 min,3.83 min,17.8 min,1.51 min,2.29 min,1.69 min,3.30 min,2.51 min,5.29 min,,,,,2.06 min,
+2025-12-19 18:12:30,4.29 min,4.47 min,15.8 min,3.81 min,17.5 min,1.52 min,2.34 min,1.67 min,3.25 min,2.45 min,5.06 min,,,,,2.03 min,
+2025-12-19 18:13:00,3.98 min,4.12 min,16.4 min,3.79 min,17.4 min,1.53 min,2.26 min,1.69 min,3.26 min,2.52 min,5.28 min,,,,,2.13 min,
+2025-12-19 18:13:30,3.91 min,4.05 min,14.6 min,3.67 min,17.6 min,1.52 min,2.55 min,1.72 min,3.25 min,2.51 min,5.20 min,,,,,2.06 min,
+2025-12-19 18:14:00,3.87 min,4.02 min,13.6 min,3.92 min,17.5 min,1.53 min,2.58 min,1.71 min,3.23 min,2.41 min,4.96 min,,,,,2.03 min,
+2025-12-19 18:14:30,3.85 min,4.03 min,12.4 min,3.92 min,21.0 min,1.56 min,2.50 min,1.70 min,3.22 min,2.49 min,4.92 min,,,,,1.92 min,
+2025-12-19 18:15:00,3.76 min,3.78 min,9.43 min,3.79 min,21.2 min,1.55 min,2.20 min,1.73 min,3.24 min,2.49 min,4.41 min,,,,,1.71 min,
+2025-12-19 18:15:30,3.73 min,3.89 min,9.15 min,3.84 min,21.1 min,1.58 min,2.08 min,1.76 min,3.31 min,2.46 min,3.84 min,,,,,1.46 min,
+2025-12-19 18:16:00,3.72 min,3.89 min,7.88 min,3.98 min,21.2 min,1.48 min,1.89 min,1.77 min,3.26 min,2.43 min,3.38 min,,,,,1.28 min,
+2025-12-19 18:16:30,3.70 min,3.68 min,6.25 min,3.97 min,21.0 min,1.54 min,1.43 min,1.80 min,3.34 min,2.39 min,2.85 min,,,,,1.10 min,
+2025-12-19 18:17:00,3.61 min,3.67 min,5.07 min,3.87 min,20.7 min,1.58 min,1.24 min,1.77 min,3.37 min,2.21 min,2.18 min,,,,,0.926 min,
+2025-12-19 18:17:30,3.60 min,3.73 min,3.10 min,3.83 min,20.3 min,1.58 min,0.797 min,1.78 min,3.26 min,2.33 min,1.63 min,,,,,0.695 min,
+2025-12-19 18:18:00,3.58 min,3.78 min,2.38 min,3.96 min,20.9 min,1.57 min,0.617 min,1.76 min,3.40 min,2.31 min,1.26 min,,,,,0.508 min,
+2025-12-19 18:18:30,3.59 min,3.87 min,1.45 min,3.95 min,20.6 min,1.55 min,0.352 min,1.75 min,3.40 min,2.29 min,0.784 min,,,,,0.319 min,
+2025-12-19 18:19:00,3.50 min,3.79 min,,3.91 min,20.3 min,1.55 min,,1.74 min,3.45 min,2.27 min,,,,,,,
+2025-12-19 18:19:30,3.55 min,3.88 min,,3.86 min,16.0 min,1.52 min,,1.67 min,3.37 min,2.19 min,,,,,,,
+2025-12-19 18:20:00,3.54 min,3.85 min,,4.08 min,16.6 min,1.53 min,,1.70 min,3.34 min,2.22 min,,,,,,,
+2025-12-19 18:20:30,3.56 min,3.83 min,,4.11 min,15.8 min,1.55 min,,1.66 min,3.34 min,2.20 min,,,,,,,
+2025-12-19 18:21:00,3.59 min,3.81 min,,4.05 min,16.6 min,1.53 min,,1.67 min,3.31 min,2.20 min,,,,,,,
+2025-12-19 18:21:30,3.56 min,3.84 min,,4.02 min,16.3 min,1.55 min,,1.70 min,3.33 min,2.22 min,,,,,,,
+2025-12-19 18:22:00,3.60 min,3.84 min,,4.15 min,16.1 min,1.53 min,,1.72 min,3.37 min,2.21 min,,,,,,,
+2025-12-19 18:22:30,3.59 min,3.80 min,,4.13 min,16.8 min,1.55 min,,1.73 min,3.32 min,2.16 min,,,,,,,
+2025-12-19 18:23:00,3.64 min,3.86 min,,4.12 min,17.1 min,1.54 min,,1.74 min,3.40 min,2.24 min,,,,,,,
+2025-12-19 18:23:30,3.78 min,3.74 min,,4.07 min,16.1 min,1.56 min,,1.75 min,3.37 min,2.22 min,,,,,,,
+2025-12-19 18:24:00,3.89 min,4.01 min,,4.19 min,16.9 min,1.56 min,,1.74 min,3.39 min,2.21 min,,,,,,,
+2025-12-19 18:24:30,3.89 min,3.98 min,,3.99 min,17.2 min,1.50 min,,1.73 min,3.41 min,2.17 min,,,,,,,
+2025-12-19 18:25:00,3.93 min,3.99 min,,3.95 min,17.3 min,1.57 min,,1.74 min,3.46 min,2.24 min,,,,,,,
+2025-12-19 18:25:30,3.92 min,3.98 min,,3.91 min,17.3 min,1.52 min,,1.68 min,3.43 min,2.19 min,,,,,,,
+2025-12-19 18:26:00,4.07 min,4.25 min,,4.08 min,17.4 min,1.57 min,,1.73 min,3.43 min,2.26 min,,,,,,,
+2025-12-19 18:26:30,5.15 min,5.19 min,,4.05 min,17.9 min,1.57 min,,1.74 min,3.49 min,2.29 min,,,1.25 min,0.113 min,,,
+2025-12-19 18:27:00,5.23 min,5.31 min,,4.04 min,17.9 min,1.57 min,,1.74 min,3.39 min,2.23 min,,,1.31 min,0.0902 min,,,
+2025-12-19 18:27:30,5.33 min,5.42 min,,3.97 min,16.6 min,1.58 min,,1.73 min,3.48 min,2.31 min,,,1.37 min,0.102 min,,,
+2025-12-19 18:28:00,5.34 min,5.42 min,,4.12 min,17.7 min,1.56 min,,1.73 min,3.49 min,2.36 min,,,1.57 min,0.113 min,,,
+2025-12-19 18:28:30,5.39 min,5.46 min,,4.05 min,18.9 min,1.58 min,,1.74 min,3.50 min,2.39 min,,,1.73 min,0.133 min,,,
+2025-12-19 18:29:00,5.30 min,5.44 min,,3.93 min,18.9 min,1.59 min,,1.73 min,3.41 min,2.40 min,,,1.81 min,0.140 min,,,
+2025-12-19 18:29:30,5.38 min,5.56 min,,3.89 min,17.7 min,1.62 min,,1.70 min,3.40 min,2.42 min,,,1.96 min,0.154 min,,,
+2025-12-19 18:30:00,5.48 min,5.62 min,,4.18 min,22.5 min,1.61 min,,1.78 min,3.52 min,2.44 min,,,2.08 min,0.168 min,,,
