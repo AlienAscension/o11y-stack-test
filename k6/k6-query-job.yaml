@@ -10,7 +10,6 @@ data:
     import { Trend, Counter } from 'k6/metrics';
     import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.2/index.js';
 
-    // Custom Metrics für die Latenz-Analyse
     const promqlLatency = new Trend('promql_query_duration_ms');
     const logqlLatency = new Trend('logql_query_duration_ms');
     const traceLatency = new Trend('trace_query_duration_ms');
@@ -32,15 +31,11 @@ data:
 
     const STACK = __ENV.STACK || 'lgtm';
 
-    // Konfiguration basierend auf deiner kubectl get svc Ausgabe
     const config = {
       lgtm: {
-        // Prometheus Server läuft auf Port 80
-        promql: 'http://prometheus-server.observability-lgtm:80/api/v1/query',
-        // Loki Gateway läuft auf Port 80
-        logql: 'http://loki-gateway.observability-lgtm:80/loki/api/v1/query_range',
-        // Tempo Service nutzt Port 3200 für die HTTP API
-        trace: 'http://tempo.observability-lgtm:3200/api/search',
+        promql: 'http://prometheus-server.observability-lgtm.svc.cluster.local:80/api/v1/query',
+        logql: 'http://loki-gateway.observability-lgtm.svc.cluster.local:80/loki/api/v1/query_range',
+        trace: 'http://tempo.observability-lgtm.svc.cluster.local:3200/api/search',
       }
     };
 
@@ -48,7 +43,7 @@ data:
       const now = Math.floor(Date.now() / 1000);
       const fifteenMinAgo = now - (15 * 60);
       
-      // 1. PromQL Query: CPU-Auslastung der OTEL-Demo
+      // 1. PromQL Query
       let promqlQuery = 'rate(container_cpu_usage_seconds_total{namespace="otel-demo-lgtm"}[5m])';
       let promqlUrl = `${config[STACK].promql}?query=${encodeURIComponent(promqlQuery)}`;
       
@@ -60,9 +55,9 @@ data:
       
       sleep(20); 
       
-      // 2. Log Query: Suche nach Fehlern in den Logs der Demo
+      // 2. LogQL Query
       let logqlQuery = '{namespace="otel-demo-lgtm"} |= "error"';
-      let logqlUrl = `${config[STACK].logql}?query=${encodeURIComponent(logqlQuery)}&start=${fifteenMinAgo}&end=${now}`;
+      let logqlUrl = `${config[STACK].logql}?query=${encodeURIComponent(logqlQuery)}&start=${fifteenMinAgo}000000000&end=${now}000000000`;
       
       let logqlRes = http.get(logqlUrl);
       logqlLatency.add(logqlRes.timings.duration);
@@ -72,8 +67,9 @@ data:
       
       sleep(20); 
       
-      // 3. Trace Query: Suche nach Traces des Frontend-Services
-      let traceUrl = `${config[STACK].trace}?service=frontend&start=${fifteenMinAgo}&end=${now}&limit=100`;
+      // 3. Trace Query - Tempo Search API
+      let traceQuery = encodeURIComponent('{service.name="frontend"}');
+      let traceUrl = `${config[STACK].trace}?q=${traceQuery}&start=${fifteenMinAgo}&end=${now}&limit=100`;
       
       let traceRes = http.get(traceUrl);
       traceLatency.add(traceRes.timings.duration);

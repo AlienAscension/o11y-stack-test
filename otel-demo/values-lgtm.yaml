@@ -10,6 +10,13 @@ default:
       value: "http://$(OTEL_COLLECTOR_NAME):4317"
     - name: OTEL_EXPORTER_OTLP_PROTOCOL
       value: "grpc"
+
+    - name: OTEL_COLLECTOR_NAME
+      value: "otel-collector"  # <-- Das fehlt!
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: "http://$(OTEL_COLLECTOR_NAME):4317"
+    - name: OTEL_EXPORTER_OTLP_PROTOCOL
+      value: "grpc"
     
     # Da wir alles über den Collector (oben) senden, brauchen wir diese 
     # spezifischen Variablen hier nicht mehr manuell setzen.
