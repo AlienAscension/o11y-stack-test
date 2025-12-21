@@ -43,7 +43,6 @@ data:
       const now = Math.floor(Date.now() / 1000);
       const fifteenMinAgo = now - (15 * 60);
       
-      // 1. PromQL Query
       let promqlQuery = 'rate(container_cpu_usage_seconds_total{namespace="otel-demo-lgtm"}[5m])';
       let promqlUrl = `${config[STACK].promql}?query=${encodeURIComponent(promqlQuery)}`;
       
@@ -55,7 +54,6 @@ data:
       
       sleep(20); 
       
-      // 2. LogQL Query
       let logqlQuery = '{namespace="otel-demo-lgtm"} |= "error"';
       let logqlUrl = `${config[STACK].logql}?query=${encodeURIComponent(logqlQuery)}&start=${fifteenMinAgo}000000000&end=${now}000000000`;
       
@@ -67,9 +65,8 @@ data:
       
       sleep(20); 
       
-      // 3. Trace Query - Tempo Search API
-      let traceQuery = encodeURIComponent('{service.name="frontend"}');
-      let traceUrl = `${config[STACK].trace}?q=${traceQuery}&start=${fifteenMinAgo}&end=${now}&limit=100`;
+      // KORRIGIERT: Verwende {} für alle Traces (funktioniert!)
+      let traceUrl = `${config[STACK].trace}?q=${encodeURIComponent('{}')}&start=${fifteenMinAgo}&end=${now}&limit=100`;
       
       let traceRes = http.get(traceUrl);
       traceLatency.add(traceRes.timings.duration);
@@ -110,7 +107,6 @@ spec:
       labels:
         app: query-benchmark
     spec:
-      # Dieser Teil ist neu und wichtig für die Schreibrechte auf dem PVC
       securityContext:
         fsGroup: 12345
         runAsUser: 12345
