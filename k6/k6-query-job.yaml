@@ -65,7 +65,7 @@ data:
       
       sleep(20); 
       
-      // KORRIGIERT: Verwende {} für alle Traces (funktioniert!)
+      // KORRIGIERT: Verwendet {} für alle Traces
       let traceUrl = `${config[STACK].trace}?q=${encodeURIComponent('{}')}&start=${fifteenMinAgo}&end=${now}&limit=100`;
       
       let traceRes = http.get(traceUrl);
