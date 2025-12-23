@@ -1,0 +1,173 @@
+# ============================================================================
+# Grafana Helm Values for OpenSearch Stack
+# Single Pane of Glass for Logs (OpenSearch), Traces (Jaeger), Metrics (Prometheus)
+# ============================================================================
+
+# Replicas
+replicas: 1
+
+# Admin credentials
+adminUser: admin
+adminPassword: admin
+
+# Persistence - using emptyDir for demo/testing (data lost on restart)
+persistence:
+  enabled: false
+
+# Use emptyDir for storage
+emptyDir:
+  sizeLimit: 1Gi
+
+# Resources
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+# Data sources configuration
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      # Prometheus - Metrics
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus-server.observability-opensearch.svc.cluster.local
+        isDefault: true
+        editable: true
+        jsonData:
+          timeInterval: 30s
+          httpMethod: POST
+      
+      # Jaeger - Traces
+      - name: Jaeger
+        type: jaeger
+        access: proxy
+        url: http://jaeger-query.observability-opensearch.svc.cluster.local:16686
+        editable: true
+        jsonData:
+          tracesToLogsV2:
+            datasourceUid: opensearch
+            spanStartTimeShift: '-1h'
+            spanEndTimeShift: '1h'
+            filterByTraceID: true
+            filterBySpanID: false
+            tags:
+              - key: service.name
+                value: service_name
+          tracesToMetrics:
+            datasourceUid: prometheus
+            spanStartTimeShift: '-1h'
+            spanEndTimeShift: '1h'
+          nodeGraph:
+            enabled: true
+      
+      # OpenSearch - Logs
+      - name: OpenSearch
+        type: grafana-opensearch-datasource
+        access: proxy
+        url: https://opensearch-cluster.observability-opensearch.svc.cluster.local:9200
+        uid: opensearch
+        editable: true
+        basicAuth: true
+        basicAuthUser: admin
+        jsonData:
+          database: "*"
+          timeField: "@timestamp"
+          version: "2.11.0"
+          logMessageField: message
+          logLevelField: severity
+          tlsSkipVerify: true
+          pplEnabled: true
+        secureJsonData:
+          basicAuthPassword: 1ihL2fm6aFo2S1dxuDRzfD
+
+# Plugins to install
+plugins:
+  - grafana-opensearch-datasource
+
+# Environment variables
+env:
+  GF_INSTALL_PLUGINS: grafana-opensearch-datasource
+  GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: grafana-opensearch-datasource
+
+# Grafana.ini configuration
+grafana.ini:
+  server:
+    root_url: http://localhost:3000
+  
+  analytics:
+    check_for_updates: false
+    reporting_enabled: false
+  
+  users:
+    allow_sign_up: false
+    auto_assign_org: true
+    auto_assign_org_role: Editor
+  
+  auth.anonymous:
+    enabled: false
+  
+  log:
+    mode: console
+    level: info
+  
+  # Enable explore mode for querying
+  explore:
+    enabled: true
+
+# Dashboard providers
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+
+# Pre-configured dashboards (optional - can be added later)
+dashboards:
+  default:
+    # otel-demo-overview:
+    #   json: |
+    #     {
+    #       "dashboard": {
+    #         "title": "OTEL Demo Overview",
+    #         "panels": []
+    #       }
+    #     }
+
+# Service Monitor for meta-monitoring
+serviceMonitor:
+  enabled: true
+  labels:
+    release: prometheus
+
+# Ingress (disabled - access via kubectl port-forward)
+ingress:
+  enabled: false
+
+# RBAC
+rbac:
+  create: true
+  pspEnabled: false
+
+# Service Account
+serviceAccount:
+  create: true
+  name: grafana

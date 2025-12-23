@@ -1,0 +1,101 @@
+# Jaeger Helm Values with OpenSearch Backend
+# Using the jaegertracing/jaeger-operator Helm chart
+
+provisionDataStore:
+  cassandra: false
+  elasticsearch: false
+
+storage:
+  type: opensearch
+  opensearch:
+    host: opensearch-cluster.observability-opensearch.svc.cluster.local
+    port: 9200
+    scheme: https
+    # Use the admin credentials from your OpenSearch cluster
+    user: admin
+    # Reference the secret created from admin-credentials.yaml
+    passwordSecret: admin-credentials-secret
+    passwordSecretKey: password
+    # TLS configuration
+    tls:
+      ca: /opensearch/certificates/ca.crt
+      skipHostVerify: true
+    # Index configuration matching jaeger-config-example.yaml
+    indexPrefix: jaeger-main
+    indexDateSeparator: "-"
+    indexRolloverFrequencySpans: day
+    indexRolloverFrequencyServices: day
+    indexRolloverFrequencyDependencies: day
+    indexRolloverFrequencySampling: day
+    # Shard and replica configuration
+    numShards: 5
+    numReplicas: 1
+
+# Collector configuration - receives traces via OTLP
+collector:
+  enabled: true
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    otlp:
+      grpc:
+        port: 4317
+      http:
+        port: 4318
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  # Mount OpenSearch CA certificate
+  extraSecretMounts:
+    - name: opensearch-ca
+      mountPath: /opensearch/certificates
+      secretName: opensearch-cluster-transport-cert
+      readOnly: true
+
+# Query service - provides the Jaeger UI
+query:
+  enabled: true
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 16686
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  # Mount OpenSearch CA certificate
+  extraSecretMounts:
+    - name: opensearch-ca
+      mountPath: /opensearch/certificates
+      secretName: opensearch-cluster-transport-cert
+      readOnly: true
+
+# Agent - typically runs as DaemonSet on nodes
+agent:
+  enabled: true
+  daemonset:
+    useHostPort: true
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# Ingester - for Kafka-based deployments (optional, disabled by default)
+ingester:
+  enabled: false
+
+# Enable service monitors for Prometheus scraping
+serviceMonitor:
+  enabled: true
+  additionalLabels:
+    release: prometheus

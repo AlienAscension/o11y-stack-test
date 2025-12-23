@@ -1,0 +1,58 @@
+# Prometheus Values for OTEL-based Observability Stack
+
+# Disable components that are not needed for OTEL collector-based setup
+alertmanager:
+  enabled: false
+
+pushgateway:
+  enabled: false
+
+# Explicitly disable pushgateway subchart
+prometheus-pushgateway:
+  enabled: false
+
+# Disable node-exporter since OTEL collector will handle host metrics
+prometheus-node-exporter:
+  enabled: false
+
+# Disable kube-state-metrics since OTEL collector will handle k8s metrics
+kube-state-metrics:
+  enabled: false
+
+# Server component configuration
+server:
+  # Enable Remote Write Receiver for OTLP metrics ingestion
+  extraFlags:
+    - web.enable-remote-write-receiver
+  
+  # Use emptyDir for metrics storage (workaround for Longhorn scheduling issue)
+  # Note: Data will be lost on pod restart - suitable for demo/testing
+  persistentVolume:
+    enabled: false
+  
+  emptyDir:
+    sizeLimit: 5Gi
+
+  # Resource allocation
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  
+  # Retention policy (adjust based on volume size)
+  retention: 15d
+
+# Service Monitor for scraping metrics from Prometheus itself
+serviceMonitor:
+  enabled: true
+  
+# Scrape configurations
+serverFiles:
+  prometheus.yml:
+    scrape_configs:
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']

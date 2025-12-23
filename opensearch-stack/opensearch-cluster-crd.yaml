@@ -1,0 +1,58 @@
+apiVersion: opensearch.opster.io/v1
+kind: OpenSearchCluster
+metadata:
+  name: opensearch-cluster
+  namespace: observability-opensearch
+spec:
+  security:
+    tls:
+      transport:
+        generate: true
+        perNode: true
+      http:
+        generate: true
+    config:
+      adminCredentialsSecret:
+        name: admin-credentials-secret
+      securityConfigSecret:
+        name: securityconfig-secret
+  general:
+    httpPort: 9200
+    serviceName: opensearch-cluster
+    version: 2.19.4
+    pluginsList: ["repository-s3"]
+    drainDataNodes: true
+    setVMMaxMapCount: true
+  dashboards:
+    opensearchCredentialsSecret:
+      name: admin-credentials-secret
+    version: 2.19.4
+    enable: true
+    replicas: 1
+    resources:
+      requests:
+         memory: "1Gi"
+         cpu: "250m"
+      limits:
+         memory: "2Gi"
+         cpu: "1000m"
+  nodePools:
+    - component: masters
+      replicas: 3
+      diskSize: "10Gi"
+      jvm: -Xmx1536M -Xms1536M
+      resources:
+         requests:
+            memory: "3Gi"
+            cpu: "500m"
+         limits:
+            memory: "4Gi"
+            cpu: "2000m"
+      roles:
+        - "data"
+        - "cluster_manager"
+      persistence:
+         pvc:
+            storageClass: longhorn
+            accessModes:
+            - ReadWriteOnce

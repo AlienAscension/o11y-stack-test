@@ -1,0 +1,222 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k6-query-script-opensearch
+  namespace: monitoring
+data:
+  query-benchmark.js: |
+    import http from 'k6/http';
+    import { check, sleep } from 'k6';
+    import { Trend, Counter } from 'k6/metrics';
+    import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.2/index.js';
+    import encoding from 'k6/encoding';
+
+    const promqlLatency = new Trend('promql_query_duration_ms');
+    const opensearchLatency = new Trend('opensearch_query_duration_ms');
+    const jaegerLatency = new Trend('jaeger_query_duration_ms');
+
+    const promqlErrors = new Counter('promql_errors');
+    const opensearchErrors = new Counter('opensearch_errors');
+    const jaegerErrors = new Counter('jaeger_errors');
+
+    export let options = {
+      vus: 1, 
+      duration: '30m', 
+      thresholds: {
+        'promql_query_duration_ms': ['p(95)<2000'], 
+        'opensearch_query_duration_ms': ['p(95)<3000'],
+        'jaeger_query_duration_ms': ['p(95)<2000'],
+        'http_req_failed': ['rate<0.05'], 
+      },
+      insecureSkipTLSVerify: true,
+    };
+
+    const OPENSEARCH_USER = 'admin';
+    const OPENSEARCH_PASSWORD = '1ihL2fm6aFo2S1dxuDRzfD';
+
+    const config = {
+      promql: 'http://prometheus-server.observability-opensearch.svc.cluster.local:80/api/v1/query',
+      opensearch: 'https://opensearch-cluster.observability-opensearch.svc.cluster.local:9200',
+      jaeger: 'http://jaeger-query.observability-opensearch.svc.cluster.local:16686',
+    };
+
+    const opensearchAuth = `Basic ${encoding.b64encode(`${OPENSEARCH_USER}:${OPENSEARCH_PASSWORD}`)}`;
+
+    export default function () {
+      const now = Math.floor(Date.now() / 1000);
+      const fifteenMinAgo = now - (15 * 60);
+      
+      // ========================================================================
+      // 1. PROMETHEUS METRICS QUERY
+      // ========================================================================
+      // Query metrics from the observability stack and otel-demo
+      let promqlQuery = 'sum by (service_name) (rate(http_server_duration_milliseconds_count[5m]))';
+      let promqlUrl = `${config.promql}?query=${encodeURIComponent(promqlQuery)}`;
+      
+      let promqlRes = http.get(promqlUrl);
+      promqlLatency.add(promqlRes.timings.duration);
+      if (!check(promqlRes, { 
+        'PromQL status 200': (r) => r.status === 200,
+        'PromQL has results': (r) => {
+          try {
+            const data = JSON.parse(r.body);
+            return data.status === 'success' && data.data.result.length > 0;
+          } catch (e) {
+            return false;
+          }
+        }
+      })) {
+        promqlErrors.add(1);
+        console.log(`PromQL Error: ${promqlRes.status} - ${promqlRes.body}`);
+      }
+      
+      sleep(20); 
+      
+      // ========================================================================
+      // 2. OPENSEARCH LOGS QUERY
+      // ========================================================================
+      // Query logs from the otel-demo index
+      const opensearchQuery = {
+        query: {
+          bool: {
+            must: [
+              {
+                range: {
+                  "@timestamp": {
+                    gte: `${fifteenMinAgo * 1000}`,
+                    lte: `${now * 1000}`,
+                    format: "epoch_millis"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        size: 100,
+        sort: [
+          {
+            "@timestamp": {
+              order: "desc"
+            }
+          }
+        ]
+      };
+      
+      let opensearchUrl = `${config.opensearch}/ss4o_logs-otel-demo-default/_search`;
+      let opensearchRes = http.post(
+        opensearchUrl,
+        JSON.stringify(opensearchQuery),
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': opensearchAuth,
+          },
+        }
+      );
+      
+      opensearchLatency.add(opensearchRes.timings.duration);
+      if (!check(opensearchRes, { 
+        'OpenSearch status 200': (r) => r.status === 200,
+        'OpenSearch has results': (r) => {
+          try {
+            const data = JSON.parse(r.body);
+            return data.hits && data.hits.total && data.hits.total.value > 0;
+          } catch (e) {
+            return false;
+          }
+        }
+      })) {
+        opensearchErrors.add(1);
+        console.log(`OpenSearch Error: ${opensearchRes.status} - ${opensearchRes.body}`);
+      }
+      
+      sleep(20); 
+      
+      // ========================================================================
+      // 3. JAEGER TRACES QUERY
+      // ========================================================================
+      // Query traces via Jaeger API
+      let jaegerUrl = `${config.jaeger}/api/traces?service=frontend&start=${fifteenMinAgo * 1000000}&end=${now * 1000000}&limit=100`;
+      
+      let jaegerRes = http.get(jaegerUrl);
+      jaegerLatency.add(jaegerRes.timings.duration);
+      if (!check(jaegerRes, { 
+        'Jaeger status 200': (r) => r.status === 200,
+        'Jaeger has results': (r) => {
+          try {
+            const data = JSON.parse(r.body);
+            return data.data && data.data.length > 0;
+          } catch (e) {
+            return false;
+          }
+        }
+      })) {
+        jaegerErrors.add(1);
+        console.log(`Jaeger Error: ${jaegerRes.status} - ${jaegerRes.body}`);
+      }
+      
+      sleep(20); 
+    }
+
+    export function handleSummary(data) {
+      return {
+        '/results/summary.json': JSON.stringify(data, null, 2),
+        'stdout': textSummary(data, { indent: ' ', enableColors: true }),
+      };
+    }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: query-results-opensearch-pvc
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: query-latency-opensearch
+  namespace: monitoring
+spec:
+  template:
+    metadata:
+      labels:
+        app: query-benchmark-opensearch
+    spec:
+      securityContext:
+        fsGroup: 12345
+        runAsUser: 12345
+      restartPolicy: Never
+      containers:
+      - name: k6
+        image: grafana/k6:0.48.0
+        command:
+        - k6
+        - run
+        - --out
+        - json=/results/results.json
+        - /scripts/query-benchmark.js
+        volumeMounts:
+        - name: scripts
+          mountPath: /scripts
+        - name: results
+          mountPath: /results
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: scripts
+        configMap:
+          name: k6-query-script-opensearch
+      - name: results
+        persistentVolumeClaim:
+          claimName: query-results-opensearch-pvc

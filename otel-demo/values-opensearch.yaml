@@ -6,29 +6,12 @@
 # Default-Einstellungen für alle Services mit OpenSearch-Stack-Endpunkten
 default:
   env:
-    # OTLP Exporter Endpoints für OpenSearch Stack
-    # Traces gehen zu Jaeger
+    # Alle Apps senden an den INTERNEN Collector der Demo via gRPC
+    - name: OTEL_COLLECTOR_NAME
+      value: "otel-collector"
     - name: OTEL_EXPORTER_OTLP_ENDPOINT
-      value: "http://jaeger-collector.observability-opensearch.svc.cluster.local:4317"
+      value: "http://$(OTEL_COLLECTOR_NAME):4317"
     - name: OTEL_EXPORTER_OTLP_PROTOCOL
-      value: "grpc"
-    
-    # Metrics-spezifische Konfiguration (Prometheus)
-    - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
-      value: "http://prometheus.observability-opensearch.svc.cluster.local:9090/api/v1/otlp/v1/metrics"
-    - name: OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
-      value: "http/protobuf"
-    
-    # Logs-Konfiguration
-    # Logs werden primär von Fluent Bit DaemonSet gesammelt
-    # OTEL Collector kann zusätzlich Logs direkt an Fluent Bit weiterleiten
-    - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
-      value: "http://fluent-bit.observability-opensearch.svc.cluster.local:24224"
-    
-    # Traces-Konfiguration
-    - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-      value: "http://jaeger-collector.observability-opensearch.svc.cluster.local:4317"
-    - name: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
       value: "grpc"
     
     # Service-spezifische Labels
@@ -55,15 +38,6 @@ default:
     - name: OTEL_RESOURCE_ATTRIBUTES
       value: service.namespace=$(OTEL_K8S_NAMESPACE),k8s.namespace.name=$(OTEL_K8S_NAMESPACE),k8s.node.name=$(OTEL_K8S_NODE_NAME),k8s.pod.name=$(OTEL_K8S_POD_NAME),deployment.environment=test,stack=opensearch
 
-  # Ressourcen (übernommen von Base)
-  resources:
-    limits:
-      memory: 200Mi
-      cpu: 200m
-    requests:
-      memory: 100Mi
-      cpu: 100m
-
 # OpenTelemetry Collector Konfiguration
 opentelemetry-collector:
   enabled: true
@@ -77,6 +51,17 @@ opentelemetry-collector:
             endpoint: 0.0.0.0:4317
           http:
             endpoint: 0.0.0.0:4318
+    
+    extensions:
+      # Health check extension (required)
+      health_check:
+        endpoint: 0.0.0.0:13133
+      
+      # BasicAuth extension for OpenSearch authentication
+      basicauth/opensearch:
+        client_auth:
+          username: admin
+          password: 1ihL2fm6aFo2S1dxuDRzfD
     
     processors:
       batch:
@@ -139,7 +124,7 @@ opentelemetry-collector:
       
       # Prometheus Remote Write für Metrics
       prometheusremotewrite/prometheus:
-        endpoint: http://prometheus.observability-opensearch.svc.cluster.local:9090/api/v1/write
+        endpoint: http://prometheus-server.observability-opensearch.svc.cluster.local/api/v1/write
         tls:
           insecure: true
         retry_on_failure:
@@ -150,28 +135,32 @@ opentelemetry-collector:
         resource_to_telemetry_conversion:
           enabled: true
       
-      # Logs - Weiterleitung an Fluent Bit (Forward Protocol)
-      # Alternativ: Fluent Bit sammelt direkt von Container-Logs
-      # Hier als Backup-Option konfiguriert
-      fluentforward:
-        endpoint: fluent-bit.observability-opensearch.svc.cluster.local:24224
-        tls:
-          insecure: true
+      # OpenSearch exporter for Logs
+      # Sends logs to OpenSearch using observability catalog schema
+      opensearch/logs:
+        logs_index: ss4o_logs-otel-demo-default
+        http:
+          endpoint: https://opensearch-cluster.observability-opensearch.svc.cluster.local:9200
+          auth:
+            authenticator: basicauth/opensearch
+          tls:
+            ca_file: /etc/opensearch-certs/ca.crt
+            insecure: false
+            insecure_skip_verify: false
         retry_on_failure:
           enabled: true
           initial_interval: 5s
           max_interval: 30s
           max_elapsed_time: 300s
-        sending_queue:
-          enabled: true
-          num_consumers: 5
-          queue_size: 500
       
-      # Logging für Debugging (optional)
-      # logging:
-      #   loglevel: debug
+      # Debug exporter for debugging (optional)
+      debug:
+        verbosity: normal
+        sampling_initial: 5
+        sampling_thereafter: 200
     
     service:
+      extensions: [health_check, basicauth/opensearch]
       pipelines:
         traces:
           receivers: [otlp]
@@ -186,7 +175,7 @@ opentelemetry-collector:
         logs:
           receivers: [otlp]
           processors: [memory_limiter, batch, resource, k8sattributes]
-          exporters: [fluentforward]
+          exporters: [opensearch/logs, debug]
   
   # Collector Resources
   resources:
@@ -226,6 +215,20 @@ opentelemetry-collector:
   serviceAccount:
     create: true
   
+  # Mount OpenSearch CA certificate from observability-opensearch namespace
+  extraVolumes:
+    - name: opensearch-ca-cert
+      secret:
+        secretName: opensearch-cluster-http-cert
+        items:
+          - key: ca.crt
+            path: ca.crt
+  
+  extraVolumeMounts:
+    - name: opensearch-ca-cert
+      mountPath: /etc/opensearch-certs
+      readOnly: true
+  
   # Ports
   ports:
     otlp:
@@ -244,104 +247,54 @@ opentelemetry-collector:
       servicePort: 8888
       protocol: TCP
 
-# ServiceMonitor für Meta-Monitoring durch kube-prom
-serviceMonitor:
-  enabled: true
-  additionalLabels:
-    prometheus: kube-prom
-    release: kube-prom
-    stack: opensearch
-
-# Load Generator Konfiguration
+# Components Konfiguration
 components:
-  loadGenerator:
+  load-generator:
     enabled: true
-    replicas: 1
-    env:
-      - name: LOCUST_USERS
-        value: "0"  # Startwert - wird während Test angepasst
-      - name: LOCUST_SPAWN_RATE
-        value: "5"
-      - name: LOCUST_HOST
-        value: "http://frontend:8080"
-      - name: LOCUST_HEADLESS
-        value: "true"
-      - name: LOCUST_AUTOSTART
-        value: "true"
-      - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
-        value: python
-    
-    resources:
-      limits:
-        memory: 512Mi
-        cpu: 500m
-      requests:
-        memory: 256Mi
-        cpu: 200m
-
-  # Alle anderen Services übernehmen die Default-Konfiguration
+    useDefault: { env: true }
   frontend:
     enabled: true
-    replicas: 1
-  
-  accountingService:
+    useDefault: { env: true }
+  accounting:
     enabled: true
-    replicas: 1
-  
-  adService:
+    useDefault: { env: true }
+  ad:
     enabled: true
-    replicas: 1
-  
-  cartService:
+    useDefault: { env: true }
+  cart:
     enabled: true
-    replicas: 1
-  
-  checkoutService:
+    useDefault: { env: true }
+  checkout:
     enabled: true
-    replicas: 1
-  
-  currencyService:
+    useDefault: { env: true }
+  currency:
     enabled: true
-    replicas: 1
-  
-  emailService:
+    useDefault: { env: true }
+  email:
     enabled: true
-    replicas: 1
-  
-  frauddetectionService:
+    useDefault: { env: true }
+  fraud-detection:
     enabled: true
-    replicas: 1
-  
-  paymentService:
+    useDefault: { env: true }
+  payment:
     enabled: true
-    replicas: 1
-  
-  productCatalogService:
+    useDefault: { env: true }
+  product-catalog:
     enabled: true
-    replicas: 1
-  
-  quoteService:
+    useDefault: { env: true }
+  quote:
     enabled: true
-    replicas: 1
-  
-  recommendationService:
+    useDefault: { env: true }
+  recommendation:
     enabled: true
-    replicas: 1
-  
-  shippingService:
+    useDefault: { env: true }
+  shipping:
     enabled: true
-    replicas: 1
-
-  # Kafka deaktiviert
+    useDefault: { env: true }
   kafka:
     enabled: false
 
-# Deaktiviere integrierte Observability (wird extern bereitgestellt)
-jaeger:
-  enabled: false
-
-prometheus:
-  enabled: false
-
-grafana:
-  enabled: false
+# Deaktiviere chart-interne Observability, da du den externen OpenSearch-Stack nutzt
+jaeger: { enabled: false }
+prometheus: { enabled: false }
+grafana: { enabled: false }
