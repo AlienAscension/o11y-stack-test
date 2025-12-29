@@ -1,0 +1,8 @@
+Pod,CPU Ø (m),CPU P95 (m),CPU Max (m),Mem Ø (MiB),Mem P95 (MiB),Mem Max (MiB),Disk Read Ø (MiB/s),Disk Write Ø (MiB/s),Disk Write Max (MiB/s),Net RX Ø (MiB/s),Net TX Ø (MiB/s),Net TX Max (MiB/s)
+prometheus-server-554d4cd447-x86gs,1.22,1.45,1.75,58.0,60.5,105,0,0.00135,0.00810,0.00195,0.000280,0.000310
+opensearch-cluster-masters-2,112.0,139.0,155.0,1995,2005,2010,0.0012,0.265,0.410,0.115,0.098,0.150
+grafana-764dd9c4b8-ffn64,4.88,5.12,6.50,108,109,115,0,0.00110,0.00150,0.000250,0.00310,0.00450
+opensearch-cluster-dashboards-5954b464c6-mpwsx,1.20,1.50,2.10,196,198,205,0,0,0,0.00210,0.00240,0.00350
+opensearch-cluster-masters-0,115.0,142.0,168.0,2010,2015,2025,0.0015,0.280,0.450,0.120,0.105,0.165
+opensearch-cluster-masters-1,108.0,135.0,148.0,1985,1990,1995,0.0011,0.250,0.390,0.110,0.095,0.145
+jaeger-7ff57964dd-ngvqv,45.30,58.40,72.10,210,245,280,0,0.0001,0.0005,0.085,0.018,0.025
