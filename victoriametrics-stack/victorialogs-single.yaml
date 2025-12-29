@@ -1,0 +1,36 @@
+apiVersion: operator.victoriametrics.com/v1
+kind: VLSingle
+metadata:
+  name: victorialogs
+  namespace: victoriametrics
+spec:
+  # Retention period for logs
+  retentionPeriod: "7d"
+  
+  # Replicas
+  replicaCount: 1
+  
+  # Storage configuration
+  storage:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 10Gi
+  
+  # Port configuration
+  port: "9428"
+  
+  # Resource limits
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  
+  # Extra arguments for VictoriaLogs
+  extraArgs:
+    # Max disk usage for storage
+    storageDataPath: /vlogs-data

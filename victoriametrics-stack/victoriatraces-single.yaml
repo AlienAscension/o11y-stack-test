@@ -1,0 +1,34 @@
+apiVersion: operator.victoriametrics.com/v1
+kind: VTSingle
+metadata:
+  name: victoriatraces
+  namespace: victoriametrics
+spec:
+  # Retention period for traces
+  retentionPeriod: "7d"
+  
+  # Replicas
+  replicaCount: 1
+  
+  # Storage configuration
+  storage:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 10Gi
+  
+  # Port configuration (default OTLP ports are used automatically)
+  
+  # Resource limits
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  
+  # Extra arguments for VictoriaTraces
+  extraArgs:
+    storageDataPath: /vtraces-data

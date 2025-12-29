@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: victoria-additional-datasources
+  namespace: victoriametrics
+  labels:
+    grafana_datasource: "1"
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      # VictoriaLogs datasource
+      - name: VictoriaLogs
+        type: victoriametrics-logs-datasource
+        access: proxy
+        url: http://vlsingle-victorialogs:9428
+        isDefault: false
+        jsonData:
+          httpMethod: POST
+        editable: true
+      
+      # VictoriaTraces datasource (Jaeger compatible)
+      - name: VictoriaTraces
+        type: jaeger
+        access: proxy
+        url: http://vtsingle-victoriatraces.victoriametrics.svc.cluster.local:10428/select/jaeger
+        isDefault: false
+        editable: true
