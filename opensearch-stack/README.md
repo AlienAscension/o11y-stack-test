@@ -195,3 +195,54 @@ helm uninstall prometheus -n observability-opensearch
 2. Set up Prometheus scrape configs for your applications
 3. Create Grafana dashboards for visualization (optional)
 4. Configure retention policies for traces in OpenSearch
+
+## Log Compression Analysis
+
+### analyze-log-compression.sh
+
+Script to analyze log compression efficiency in the OpenSearch cluster.
+
+**Usage:**
+
+```bash
+# Basic usage (requires port-forward to OpenSearch)
+kubectl port-forward -n observability-opensearch svc/opensearch-cluster 9200:9200 &
+./analyze-log-compression.sh
+
+# Export results to CSV
+EXPORT_CSV=true ./analyze-log-compression.sh
+
+# Change sample size (default: 1000)
+SAMPLE_SIZE=2000 ./analyze-log-compression.sh
+
+# Use custom credentials
+OPENSEARCH_PASSWORD=your_password ./analyze-log-compression.sh
+```
+
+**What it measures:**
+
+- Total documents and storage size
+- Estimated uncompressed size (by sampling documents)
+- Compression ratio
+- Space saved by compression
+
+**Example output:**
+
+```
+Index Information:
+  Index Name:           ss4o_logs-otel-demo-default
+  Total Documents:      243,966
+  Segment Count:        12
+
+Storage Analysis:
+  Stored Size:          35.53 MB
+  Avg Doc Size (disk):  152.71 bytes
+
+Uncompressed Estimate:
+  Avg JSON Size:        691.78 bytes
+  Est. Total Size:      160.95 MB
+
+Compression Results:
+  Compression Ratio:    4.53:1
+  Space Saved:          125.42 MB (77.9%)
+```

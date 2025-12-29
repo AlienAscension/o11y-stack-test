@@ -1,0 +1,2 @@
+timestamp,index_name,total_docs,store_size_mb,estimated_uncompressed_mb,compression_ratio,space_saved_mb,space_saved_percent
+2025-12-29T11:37:22+01:00,ss4o_logs-otel-demo-default,243968,35.53,160.95,4.53,125.42,77.9
