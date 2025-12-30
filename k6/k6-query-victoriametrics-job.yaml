@@ -1,0 +1,184 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k6-query-script-victoriametrics
+  namespace: monitoring
+data:
+  query-benchmark.js: |
+    import http from 'k6/http';
+    import { check, sleep } from 'k6';
+    import { Trend, Counter } from 'k6/metrics';
+    import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.2/index.js';
+
+    const vmMetricsLatency = new Trend('vm_metrics_query_duration_ms');
+    const vmLogsLatency = new Trend('vm_logs_query_duration_ms');
+    const vmTracesLatency = new Trend('vm_traces_query_duration_ms');
+
+    const vmMetricsErrors = new Counter('vm_metrics_errors');
+    const vmLogsErrors = new Counter('vm_logs_errors');
+    const vmTracesErrors = new Counter('vm_traces_errors');
+
+    export let options = {
+      vus: 1, 
+      duration: '30m', 
+      thresholds: {
+        'vm_metrics_query_duration_ms': ['p(95)<2000'], 
+        'vm_logs_query_duration_ms': ['p(95)<3000'],
+        'vm_traces_query_duration_ms': ['p(95)<2000'],
+        'http_req_failed': ['rate<0.05'], 
+      },
+      insecureSkipTLSVerify: true,
+    };
+
+    const config = {
+      vmMetrics: 'http://vmsingle-victoria-metrics-victoria-metrics-k8s-stack.victoriametrics.svc.cluster.local:8428/api/v1/query',
+      vmLogs: 'http://vlsingle-victorialogs.victoriametrics.svc.cluster.local:9428/select/logsql/query',
+      vmTraces: 'http://vtsingle-victoriatraces.victoriametrics.svc.cluster.local:10428/select/jaeger/api/traces',
+    };
+
+    export default function () {
+      const now = Math.floor(Date.now() / 1000);
+      const fifteenMinAgo = now - (15 * 60);
+      
+      // ========================================================================
+      // 1. VICTORIAMETRICS METRICS QUERY
+      // ========================================================================
+      // Query metrics from the otel-demo application
+      let vmMetricsQuery = 'sum by (service_name) (rate(http_server_duration_milliseconds_count[5m]))';
+      let vmMetricsUrl = `${config.vmMetrics}?query=${encodeURIComponent(vmMetricsQuery)}`;
+      
+      let vmMetricsRes = http.get(vmMetricsUrl);
+      vmMetricsLatency.add(vmMetricsRes.timings.duration);
+      if (!check(vmMetricsRes, { 
+        'VM Metrics status 200': (r) => r.status === 200,
+        'VM Metrics has results': (r) => {
+          try {
+            const data = JSON.parse(r.body);
+            return data.status === 'success' && data.data.result.length >= 0;
+          } catch (e) {
+            return false;
+          }
+        }
+      })) {
+        vmMetricsErrors.add(1);
+        console.log(`VM Metrics Error: ${vmMetricsRes.status} - ${vmMetricsRes.body}`);
+      }
+      
+      sleep(20); 
+      
+      // ========================================================================
+      // 2. VICTORIALOGS LOGS QUERY
+      // ========================================================================
+      // Query logs from otel-demo using LogsQL
+      // VictoriaLogs query - simple filter for namespace
+      const vmLogsQuery = `k8s.namespace.name:otel-demo`;
+      let vmLogsUrl = `${config.vmLogs}?query=${encodeURIComponent(vmLogsQuery)}&limit=100`;
+      
+      let vmLogsRes = http.get(vmLogsUrl);
+      
+      vmLogsLatency.add(vmLogsRes.timings.duration);
+      if (!check(vmLogsRes, { 
+        'VM Logs status 200': (r) => r.status === 200,
+        'VM Logs has results': (r) => {
+          try {
+            // VictoriaLogs returns newline-delimited JSON
+            return r.body.length > 0;
+          } catch (e) {
+            return false;
+          }
+        }
+      })) {
+        vmLogsErrors.add(1);
+        console.log(`VM Logs Error: ${vmLogsRes.status} - ${vmLogsRes.body}`);
+      }
+      
+      sleep(20); 
+      
+      // ========================================================================
+      // 3. VICTORIATRACES TRACES QUERY
+      // ========================================================================
+      // Query traces via Jaeger-compatible API
+      let vmTracesUrl = `${config.vmTraces}?service=frontend&start=${fifteenMinAgo * 1000000}&end=${now * 1000000}&limit=100`;
+      
+      let vmTracesRes = http.get(vmTracesUrl);
+      vmTracesLatency.add(vmTracesRes.timings.duration);
+      if (!check(vmTracesRes, { 
+        'VM Traces status 200': (r) => r.status === 200,
+        'VM Traces has results': (r) => {
+          try {
+            const data = JSON.parse(r.body);
+            return data.data && data.data.length >= 0;
+          } catch (e) {
+            return false;
+          }
+        }
+      })) {
+        vmTracesErrors.add(1);
+        console.log(`VM Traces Error: ${vmTracesRes.status} - ${vmTracesRes.body}`);
+      }
+      
+      sleep(20); 
+    }
+
+    export function handleSummary(data) {
+      return {
+        '/results/summary.json': JSON.stringify(data, null, 2),
+        'stdout': textSummary(data, { indent: ' ', enableColors: true }),
+      };
+    }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: query-results-victoriametrics-pvc
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: query-latency-victoriametrics
+  namespace: monitoring
+spec:
+  template:
+    metadata:
+      labels:
+        app: query-benchmark-victoriametrics
+    spec:
+      securityContext:
+        fsGroup: 12345
+        runAsUser: 12345
+      restartPolicy: Never
+      containers:
+      - name: k6
+        image: grafana/k6:0.48.0
+        command:
+        - k6
+        - run
+        - --out
+        - json=/results/results.json
+        - /scripts/query-benchmark.js
+        volumeMounts:
+        - name: scripts
+          mountPath: /scripts
+        - name: results
+          mountPath: /results
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: scripts
+        configMap:
+          name: k6-query-script-victoriametrics
+      - name: results
+        persistentVolumeClaim:
+          claimName: query-results-victoriametrics-pvc

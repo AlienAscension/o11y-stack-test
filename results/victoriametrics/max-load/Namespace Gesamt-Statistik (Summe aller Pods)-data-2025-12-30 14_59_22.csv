@@ -1,0 +1,2 @@
+"Value #CPU_AVG","Value #CPU_MAX","Value #MEM_AVG","Value #MEM_MAX","Value #DISK_READ_AVG","Value #DISK_WRITE_AVG","Value #DISK_WRITE_MAX","Value #NET_RX_AVG","Value #NET_TX_AVG","Value #NET_TX_MAX"
+27.0,29.4,688,716,0.0185,0.116,0.182,0.0472,0.0587,0.0641

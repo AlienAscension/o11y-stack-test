@@ -1,0 +1,7 @@
+"Pod","CPU Ø (m)","CPU P95 (m)","CPU Max (m)","Mem Ø (MiB)","Mem P95 (MiB)","Mem Max (MiB)","Disk Read Ø (MiB/s)","Disk Write Ø (MiB/s)","Disk Write Max (MiB/s)","Net RX Ø (MiB/s)","Net TX Ø (MiB/s)","Net TX Max (MiB/s)"
+victoria-metrics-victoria-metrics-operator-769bc8b746-f2frs,2.55,2.65,2.72,50.3,55.1,56.0,0.00270,0,0,0.00253,0.000858,0.000970
+vmalert-victoria-metrics-victoria-metrics-k8s-stack-7b7f66vnlhh,4.68,4.78,4.80,37.9,38.6,38.8,0.000302,0,0,0.00813,0.0129,0.0131
+vmsingle-victoria-metrics-victoria-metrics-k8s-stack-8445fdhsmp,6.63,6.85,6.93,59.8,68.9,72.3,0.00129,0.00744,0.00977,0.0158,0.00791,0.00801
+vlsingle-victorialogs-757677f7cd-hl8q6,2.75,4.63,4.69,133,157,160,0.0128,0.0403,0.0978,0.00328,0.00162,0.00210
+vtsingle-victoriatraces-5d5445664c-mw2cb,5.85,6.79,6.81,195,215,222,0.00172,0.0670,0.0808,0.00807,0.0350,0.0404
+victoria-metrics-grafana-7cbb7467b4-98vx2,4.52,4.69,4.80,211,211,211,0,0.00101,0.00120,0.00943,0.000329,0.000342

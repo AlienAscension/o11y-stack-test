@@ -1,0 +1,2 @@
+timestamp,stream_filter,time_range,total_docs,store_size_mb,estimated_uncompressed_mb,compression_ratio,space_saved_mb,space_saved_percent
+2025-12-30T15:06:19+01:00,{namespace="otel-demo"},24h,0,1024.00,N/A,N/A,N/A,N/A
