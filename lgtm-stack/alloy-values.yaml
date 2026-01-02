@@ -2,13 +2,75 @@
 # Collects container logs and sends to Loki
 
 alloy:
+  extraPorts:
+    - name: "otlp-grpc"
+      port: 4317
+      targetPort: 4317
+      protocol: "TCP"
+    - name: "otlp-http"
+      port: 4318
+      targetPort: 4318
+      protocol: "TCP"
   configMap:
     content: |-
-      // Discover pods in otel-demo-lgtm namespace
+      // Discover pods in otel-demo namespace
       discovery.kubernetes "pods" {
         role = "pod"
         namespaces {
-          names = ["otel-demo-lgtm"]
+          names = ["otel-demo"]
+        }
+      }
+      
+      // OTLP Receiver for logs from OpenTelemetry Collector
+      otelcol.receiver.otlp "default" {
+        grpc {
+          endpoint = "0.0.0.0:4317"
+        }
+        
+        http {
+          endpoint = "0.0.0.0:4318"
+        }
+        
+        output {
+          logs    = [otelcol.processor.batch.default.input]
+          metrics = [otelcol.processor.batch.default.input]
+          traces  = [otelcol.processor.batch.default.input]
+        }
+      }
+      
+      // Batch processor
+      otelcol.processor.batch "default" {
+        output {
+          logs    = [otelcol.exporter.loki.default.input]
+          metrics = [otelcol.exporter.prometheus.default.input]
+          traces  = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      
+      // Export logs to Loki via OTLP->Loki conversion
+      otelcol.exporter.loki "default" {
+        forward_to = [loki.write.loki.receiver]
+      }
+      
+      // Export metrics to Prometheus (via remote write)
+      otelcol.exporter.prometheus "default" {
+        forward_to = [prometheus.remote_write.prometheus.receiver]
+      }
+      
+      // Export traces to Tempo
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo.observability-lgtm.svc.cluster.local:4317"
+          tls {
+            insecure = true
+          }
+        }
+      }
+      
+      // Prometheus Remote Write
+      prometheus.remote_write "prometheus" {
+        endpoint {
+          url = "http://prometheus-server.observability-lgtm.svc.cluster.local:80/api/v1/write"
         }
       }
 

@@ -1,0 +1,2 @@
+timestamp,label_filter,time_range,total_docs,store_size_mb,estimated_uncompressed_mb,compression_ratio,space_saved_mb,space_saved_percent
+2026-01-02T12:37:09+01:00,{namespace="otel-demo"},48h,17717081,207.59,3149.64,15.17,2942.05,93.4
